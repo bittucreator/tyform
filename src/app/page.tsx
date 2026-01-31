@@ -2,20 +2,156 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, CheckCircle, Sparkle, Lightning, Shield, Heart } from '@phosphor-icons/react'
+import { 
+  ArrowRight, 
+  Lightning, 
+  Shield, 
+  Check,
+  CaretDown,
+  Palette,
+  ChartLine,
+  Code,
+  Globe,
+  X,
+  LockSimple,
+  ShieldCheck,
+} from '@phosphor-icons/react'
+import { cn } from '@/lib/utils'
+
+const features = [
+  {
+    icon: Lightning,
+    title: 'Drag & Drop Builder',
+    description: 'Build forms visually with our intuitive interface. No coding required.',
+  },
+  {
+    icon: Palette,
+    title: 'Beautiful Themes',
+    description: '100+ Google Fonts, custom colors, backgrounds, and button styles.',
+  },
+  {
+    icon: ChartLine,
+    title: 'Analytics & Insights',
+    description: 'Track views, completion rates, drop-offs, and response trends.',
+  },
+  {
+    icon: Shield,
+    title: 'Secure & Private',
+    description: 'Your data is encrypted. We never sell your information.',
+  },
+  {
+    icon: Code,
+    title: 'API & Webhooks',
+    description: 'Integrate with your stack using our REST API and webhooks.',
+  },
+  {
+    icon: Globe,
+    title: 'Custom Domains',
+    description: 'Use your own domain for a branded experience.',
+  },
+]
+
+
+
+const pricingPlans = [
+  {
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    description: 'Perfect for getting started',
+    features: [
+      'Unlimited forms',
+      '100 responses/month',
+      '24 question types',
+      'Basic analytics',
+      'Tyform branding',
+    ],
+    cta: 'Get Started',
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    price: '$19',
+    period: '/month',
+    description: 'For growing businesses',
+    features: [
+      'Everything in Free',
+      'Unlimited responses',
+      'Remove branding',
+      'Custom domain',
+      'Advanced analytics',
+      'Priority support',
+    ],
+    cta: 'Start Free Trial',
+    popular: true,
+  },
+  {
+    name: 'Team',
+    price: '$49',
+    period: '/month',
+    description: 'For teams and agencies',
+    features: [
+      'Everything in Pro',
+      '5 team members',
+      'API access',
+      'Webhooks',
+      'White-label',
+      'Dedicated support',
+    ],
+    cta: 'Contact Sales',
+    popular: false,
+  },
+]
+
+const faqs = [
+  {
+    question: 'How does the free plan work?',
+    answer: 'The free plan includes unlimited forms with up to 100 responses per month. You get access to all 24 question types and basic analytics. The only limitation is the Tyform branding on your forms.',
+  },
+  {
+    question: 'Can I upgrade or downgrade anytime?',
+    answer: 'Yes! You can upgrade, downgrade, or cancel your plan at any time. When you upgrade, you\'ll be charged a prorated amount. When you downgrade, the change takes effect at the end of your billing cycle.',
+  },
+  {
+    question: 'Do you offer refunds?',
+    answer: 'We offer a 14-day money-back guarantee on all paid plans. If you\'re not satisfied, just reach out to our support team and we\'ll process your refund.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer: 'We accept all major credit cards (Visa, Mastercard, American Express) through our secure payment processor Stripe. For Team plans, we also offer invoice-based billing.',
+  },
+  {
+    question: 'Can I use my own domain?',
+    answer: 'Yes! Pro and Team plans include custom domain support. You can host your forms on your own domain (e.g., forms.yourcompany.com) for a fully branded experience.',
+  },
+  {
+    question: 'Is my data secure?',
+    answer: 'Absolutely. All data is encrypted in transit and at rest. We\'re SOC 2 compliant and never sell your data to third parties. You can also delete your data at any time.',
+  },
+]
 
 export default function HomePage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [showVideo, setShowVideo] = useState(false)
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-1.5">
               <Image src="/logo.svg" alt="Tyform" width={32} height={32} className="rounded-lg" />
               <span className="font-semibold text-xl text-foreground">Tyform</span>
             </Link>
+
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+              <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+            </nav>
 
             <div className="flex items-center space-x-4">
               <Link href="/login">
@@ -30,162 +166,343 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-muted-foreground text-sm font-medium mb-8">
-            <Sparkle className="h-4 w-4" />
-            The modern form builder
+      <section className="pt-50 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-[1.1] tracking-tight">
+              Build forms that<br />
+              people love to fill
+            </h1>
+            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+              Create beautiful, engaging forms in minutes. Collect data, feedback, and payments 
+              with a delightful experience your respondents will appreciate.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/signup">
+                <Button>
+                  Get Started Free
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="ghost">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm text-muted-foreground mt-6">
+              No credit card required
+            </p>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 leading-tight">
-            Build forms that
-            <span className="underline decoration-2 underline-offset-4">
-              {' '}people love{' '}
-            </span>
-            to fill
-          </h1>
-          <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Create beautiful, engaging forms that convert. Tyform makes it easy to collect
-            data, feedback, and leads with a delightful experience.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/signup">
-              <Button size="lg" className="text-lg px-8 py-6">
-                Start for free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                View demo
-              </Button>
-            </Link>
+
+          {/* Hero Image */}
+          <div className="mt-20 relative">
+            <div className="relative mx-auto" style={{ maxWidth: '1280px' }}>
+              <Image 
+                src="/hero.png" 
+                alt="Tyform Builder" 
+                width={1280}
+                height={720}
+                className="w-full h-auto rounded-2xl"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
+      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Everything you need to collect data
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+              Everything you need
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Powerful features that help you create forms, surveys, and quizzes in minutes.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 rounded-2xl bg-card border border-border shadow-xs">
-              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-                <Lightning className="h-6 w-6 text-foreground" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <div 
+                key={index} 
+                className="group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300"
+              >
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <feature.icon className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Drag & Drop Builder
-              </h3>
-              <p className="text-muted-foreground">
-                Build forms visually with our intuitive drag and drop interface. No coding required.
-              </p>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="p-6 rounded-2xl bg-card border border-border shadow-xs">
-              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-                <CheckCircle className="h-6 w-6 text-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Smart Logic
-              </h3>
-              <p className="text-muted-foreground">
-                Create dynamic forms with conditional logic that adapts to your respondents.
-              </p>
-            </div>
+      {/* Pricing */}
+      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Start for free, upgrade when you need more.
+            </p>
+          </div>
 
-            <div className="p-6 rounded-2xl bg-card border border-border shadow-xs">
-              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-foreground" />
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <div 
+                key={index} 
+                className={cn(
+                  "relative p-8 rounded-2xl bg-card border-2",
+                  plan.popular 
+                    ? "border-primary shadow-lg scale-105" 
+                    : "border-border"
+                )}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                    Most Popular
+                  </div>
+                )}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-muted-foreground">{plan.period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-5 w-5 text-primary shrink-0" weight="bold" />
+                      <span className="text-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup" className="block">
+                  <Button 
+                    className="w-full" 
+                    variant={plan.popular ? "default" : "outline"}
+                    size="lg"
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Secure & Private
-              </h3>
-              <p className="text-muted-foreground">
-                Your data is encrypted and secure. We never sell your information to third parties.
-              </p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Security */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-neutral-200 flex items-center justify-center">
+                <Shield className="h-5 w-5 text-foreground" weight="fill" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground text-sm">GDPR Compliant</p>
+                <p className="text-xs text-muted-foreground">EU data protection</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-neutral-200 flex items-center justify-center">
+                <LockSimple className="h-5 w-5 text-foreground" weight="fill" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground text-sm">SSL Encrypted</p>
+                <p className="text-xs text-muted-foreground">256-bit encryption</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-neutral-200 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-foreground" weight="fill" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground text-sm">SOC 2 Type II</p>
+                <p className="text-xs text-muted-foreground">Enterprise security</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Question TextTs */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* Integrations */}
+      <section id="integrations" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              15+ Question TextTs
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-sm font-medium mb-6">
+              Coming Soon
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+              Connect with your favorite tools
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              From simple text fields to complex rating scales, we have got you covered.
+              Seamlessly integrate Tyform with the tools you already use to automate your workflows.
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {[
-              'Short Text',
-              'Long Text',
-              'Email',
-              'Number',
-              'Phone',
-              'Multiple Choice',
-              'Checkboxes',
-              'Dropdown',
-              'Rating',
-              'Scale',
-              'Date',
-              'Yes/No',
-              'Website URL',
-              'Welcome Screen',
-              'Thank You',
-            ].map((type) => (
-              <span
-                key={type}
-                className="px-4 py-2 rounded-full bg-muted text-muted-foreground text-sm font-medium border border-border"
+              { name: 'Slack', logo: '/slack.svg', size: 40 },
+              { name: 'Google Sheets', logo: '/sheets.svg', size: 32 },
+              { name: 'Notion', logo: '/notion.svg', size: 32 },
+              { name: 'Stripe', logo: '/stripe.svg', size: 44 },
+              { name: 'Polar', logo: '/polar.svg', size: 32 },
+              { name: 'Dodo Payments', logo: '/dodo.svg', size: 32 },
+            ].map((integration) => (
+              <div
+                key={integration.name}
+                className="flex flex-col items-center justify-center p-6 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors opacity-60"
               >
-                {type}
-              </span>
+                <Image src={integration.logo} alt={integration.name} width={integration.size} height={integration.size} className="mb-3" />
+                <span className="text-sm font-medium text-foreground">{integration.name}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-muted-foreground">
+              More integrations coming soon. Stay tuned!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+              Frequently asked questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Everything you need to know about Tyform.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div 
+                key={index}
+                className="border border-border rounded-xl overflow-hidden"
+              >
+                <button
+                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                >
+                  <span className="font-medium text-foreground">{faq.question}</span>
+                  <CaretDown 
+                    className={cn(
+                      "h-5 w-5 text-muted-foreground transition-transform",
+                      openFaq === index && "rotate-180"
+                    )} 
+                  />
+                </button>
+                {openFaq === index && (
+                  <div className="px-6 pb-4">
+                    <p className="text-muted-foreground">{faq.answer}</p>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-            Ready to create your first form?
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Join thousands of creators who use Tyform to collect data beautifully.
-          </p>
-          <Link href="/signup">
-            <Button size="lg" className="text-lg px-8 py-6">
-              Get started for free
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-3xl p-12 md:p-16 text-center" style={{ backgroundColor: '#fafafa' }}>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
+              Ready to create your first form?
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+              Join thousands of creators who use Tyform to collect data beautifully.
+            </p>
+            <Link href="/signup">
+              <Button>
+                Get started for free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-border">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <Image src="/logo.svg" alt="Tyform" width={24} height={24} className="rounded-md" />
-            <span className="font-medium text-foreground">Tyform</span>
+      <footer className="py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between gap-12">
+            <div className="max-w-xs">
+              <p className="text-muted-foreground text-sm mb-6">
+                Create beautiful, engaging forms that people love to fill out. Built for teams who care about design.
+              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm text-muted-foreground">Operational</span>
+                <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                © 2026
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-12 md:gap-16">
+              <div>
+                <h4 className="font-semibold text-foreground mb-4">Features</h4>
+                <ul className="space-y-2">
+                  <li><a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Overview</a></li>
+                  <li><a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a></li>
+                  <li><a href="#integrations" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Integrations</a></li>
+                  <li><a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a></li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-foreground mb-4">Company</h4>
+                <ul className="space-y-2">
+                  <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
+                  <li><Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About</Link></li>
+                  <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</Link></li>
+                  <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</Link></li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            © 2026 Tyform. Built with <Heart className="h-4 w-4 text-red-500" weight="fill" />
-          </p>
+          {/* Large Logo */}
+          <div className="flex justify-center -mb-125">
+            <Image src="/logo.svg" alt="Tyform" width={1000} height={1000} className="opacity-10" />
+          </div>
         </div>
       </footer>
+
+      {/* Video Modal */}
+      {showVideo && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setShowVideo(false)}
+        >
+          <div className="relative max-w-4xl w-full aspect-video bg-black rounded-2xl overflow-hidden">
+            <button 
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+              onClick={() => setShowVideo(false)}
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-white/60">Demo video coming soon</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
