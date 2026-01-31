@@ -8,13 +8,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, ArrowClockwise, Globe, CheckCircle, XCircle, ArrowsClockwise } from '@phosphor-icons/react'
+import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, ArrowClockwise, Globe, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
+    DialogFooter,
 } from '@/components/ui/dialog'
 import {
     AlertDialog,
@@ -33,7 +35,9 @@ import {
     TabsList,
     TabsTrigger,
 } from '@/components/ui/tabs'
+import { PrettyUrls } from '@/components/domains/pretty-urls'
 import type { User } from '@supabase/supabase-js'
+import type { Domain, Form } from '@/types/database'
 
 interface SettingsModalProps {
     open: boolean
@@ -120,6 +124,8 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
     const [addingDomain, setAddingDomain] = useState(false)
     const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null)
     const [deletingDomain, setDeletingDomain] = useState<string | null>(null)
+    const [manageUrlsDomain, setManageUrlsDomain] = useState<{ id: string; domain: string } | null>(null)
+    const [forms, setForms] = useState<Pick<Form, 'id' | 'title'>[]>([])
     
     // API state
     const [apiKeys, setApiKeys] = useState<Array<{ id: string; name: string; key: string; created_at: string; last_used?: string }>>([]) 
@@ -563,6 +569,16 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
             if (response.ok) {
                 const data = await response.json()
                 setDomains(data.domains || [])
+            }
+            
+            // Also load forms for Pretty URLs
+            if (user?.id) {
+                const { data: formsData } = await supabase
+                    .from('forms')
+                    .select('id, title')
+                    .eq('user_id', user.id)
+                    .order('title', { ascending: true })
+                setForms(formsData || [])
             }
         } catch {
             console.error('Failed to load domains')
@@ -1035,7 +1051,7 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                             <div>
                                 <h3 className="font-medium text-[13px] mb-1">Email Notifications</h3>
                                 <p className="text-[11px] text-muted-foreground/70 mb-4">
-                                    Choose which emails you'd like to receive. Powered by Unosend.
+                                    Choose which emails you&apos;d like to receive. Powered by Unosend.
                                 </p>
                             </div>
                             
@@ -1385,6 +1401,17 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-1">
+                                                        {domain.status === 'verified' && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-7 text-[11px] px-2"
+                                                                onClick={() => setManageUrlsDomain({ id: domain.id, domain: domain.domain })}
+                                                            >
+                                                                <LinkIcon className="w-3.5 h-3.5 mr-1" />
+                                                                URLs
+                                                            </Button>
+                                                        )}
                                                         {domain.status !== 'verified' && (
                                                             <Button
                                                                 variant="ghost"
@@ -1611,6 +1638,38 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                     </div>
                 </Tabs>
             </DialogContent>
+
+            {/* Manage URLs Dialog */}
+            <Dialog open={!!manageUrlsDomain} onOpenChange={() => setManageUrlsDomain(null)}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-[15px]">Manage URLs</DialogTitle>
+                        <DialogDescription className="text-[13px]">
+                            Create pretty URLs for your forms on <span className="font-medium text-foreground">{manageUrlsDomain?.domain}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="py-4">
+                        {manageUrlsDomain && (
+                            <PrettyUrls 
+                                domain={{ id: manageUrlsDomain.id, domain: manageUrlsDomain.domain } as Domain} 
+                                forms={forms as Form[]} 
+                            />
+                        )}
+                    </div>
+                    
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-[12px]"
+                            onClick={() => setManageUrlsDomain(null)}
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     )
 }
