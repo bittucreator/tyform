@@ -375,27 +375,87 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          workspace_id: string | null
           domain: string
           verified: boolean
           verification_token: string | null
+          favicon: string | null
+          meta_title: string | null
+          meta_description: string | null
+          meta_image: string | null
+          search_indexing: boolean
+          code_injection: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
+          workspace_id?: string | null
           domain: string
           verified?: boolean
           verification_token?: string | null
+          favicon?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
+          search_indexing?: boolean
+          code_injection?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
+          workspace_id?: string | null
           domain?: string
           verified?: boolean
           verification_token?: string | null
+          favicon?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
+          search_indexing?: boolean
+          code_injection?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      domain_urls: {
+        Row: {
+          id: string
+          domain_id: string
+          form_id: string
+          slug: string
+          is_default: boolean
+          meta_title: string | null
+          meta_description: string | null
+          meta_image: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          domain_id: string
+          form_id: string
+          slug: string
+          is_default?: boolean
+          meta_title?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          domain_id?: string
+          form_id?: string
+          slug?: string
+          is_default?: boolean
+          meta_title?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -417,3 +477,5 @@ export type ResponseInsert = Database['public']['Tables']['responses']['Insert']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Domain = Database['public']['Tables']['domains']['Row']
 export type DomainInsert = Database['public']['Tables']['domains']['Insert']
+export type DomainUrl = Database['public']['Tables']['domain_urls']['Row']
+export type DomainUrlInsert = Database['public']['Tables']['domain_urls']['Insert']

@@ -225,45 +225,82 @@ export function DomainsList({ domains: initialDomains }: DomainsListProps) {
 
       {/* View Records Dialog */}
       <Dialog open={!!viewRecordsDomain} onOpenChange={() => setViewRecordsDomain(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-[15px]">DNS Configuration</DialogTitle>
             <DialogDescription className="text-[13px]">
-              Add these records to your domain&apos;s DNS settings for <span className="font-medium text-foreground">{viewRecordsDomain?.domain}</span>
+              Add these DNS records to your domain provider&apos;s settings for <span className="font-medium text-foreground">{viewRecordsDomain?.domain}</span>
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            {/* CNAME Record */}
-            <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+          
+          <div className="py-4 space-y-5">
+            {/* Domain Status */}
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+              <div className={`w-3 h-3 rounded-full ${viewRecordsDomain?.verified ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`} />
               <div>
-                <p className="text-[13px] font-medium">CNAME Record</p>
-                <p className="text-[11px] text-muted-foreground/60">Point your domain to Tyform</p>
+                <p className="text-[13px] font-medium">
+                  {viewRecordsDomain?.verified ? 'Domain Active' : 'Pending Verification'}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {viewRecordsDomain?.verified 
+                    ? 'Your domain is connected and serving forms' 
+                    : 'Add the DNS records below to verify ownership'}
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">TextT</p>
-                  <p className="font-mono text-[12px]">CNAME</p>
+            </div>
+
+            {/* DNS Records Header */}
+            <div className="flex items-center justify-between">
+              <h4 className="text-[13px] font-medium">DNS Records</h4>
+              <p className="text-[10px] text-muted-foreground">Add these to Cloudflare, Namecheap, GoDaddy, etc.</p>
+            </div>
+
+            {/* CNAME Record */}
+            <div className="border border-border/50 rounded-lg overflow-hidden">
+              <div className="bg-muted/30 px-4 py-2.5 border-b border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] font-mono">CNAME</Badge>
+                  <span className="text-[12px] text-muted-foreground">Point your domain to Tyform</span>
                 </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">Name</p>
-                  <p className="font-mono text-[12px]">@</p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">Value</p>
-                  <div className="flex items-center gap-2">
-                    <p className="font-mono text-[12px]">cname.tyform.app</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-5 w-5"
-                      onClick={() => copyToClipboard('cname.tyform.app', 'cname')}
-                    >
-                      {copiedField === 'cname' ? (
-                        <Check className="h-2.5 w-2.5 text-green-500" />
-                      ) : (
-                        <Copy className="h-2.5 w-2.5" />
-                      )}
-                    </Button>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5">Name / Host</p>
+                    <div className="flex items-center gap-2 bg-muted/30 rounded px-3 py-2">
+                      <code className="font-mono text-[12px] flex-1">@</code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => copyToClipboard('@', 'cname-name')}
+                      >
+                        {copiedField === 'cname-name' ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">Use @ or leave blank for root domain</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5">Value / Target</p>
+                    <div className="flex items-center gap-2 bg-muted/30 rounded px-3 py-2">
+                      <code className="font-mono text-[12px] flex-1">cname.tyform.com</code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => copyToClipboard('cname.tyform.com', 'cname-value')}
+                      >
+                        {copiedField === 'cname-value' ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -271,62 +308,103 @@ export function DomainsList({ domains: initialDomains }: DomainsListProps) {
 
             {/* TXT Record */}
             {viewRecordsDomain && !viewRecordsDomain.verified && (
-              <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                <div>
-                  <p className="text-[13px] font-medium">TXT Record</p>
-                  <p className="text-[11px] text-muted-foreground/60">Verify domain ownership</p>
+              <div className="border border-border/50 rounded-lg overflow-hidden">
+                <div className="bg-muted/30 px-4 py-2.5 border-b border-border/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] font-mono">TXT</Badge>
+                    <span className="text-[12px] text-muted-foreground">Verify domain ownership</span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">TextT</p>
-                    <p className="font-mono text-[12px]">TXT</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">Name</p>
-                    <p className="font-mono text-[12px]">_tyform</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-1">Value</p>
-                    <div className="flex items-center gap-2">
-                      <p className="font-mono text-[11px] truncate max-w-24">
-                        {viewRecordsDomain.verification_token}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5"
-                        onClick={() => copyToClipboard(viewRecordsDomain.verification_token || '', 'txt')}
-                      >
-                        {copiedField === 'txt' ? (
-                          <Check className="h-2.5 w-2.5 text-green-500" />
-                        ) : (
-                          <Copy className="h-2.5 w-2.5" />
-                        )}
-                      </Button>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5">Name / Host</p>
+                      <div className="flex items-center gap-2 bg-muted/30 rounded px-3 py-2">
+                        <code className="font-mono text-[12px] flex-1">_tyform</code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => copyToClipboard('_tyform', 'txt-name')}
+                        >
+                          {copiedField === 'txt-name' ? (
+                            <Check className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5">Value</p>
+                      <div className="flex items-center gap-2 bg-muted/30 rounded px-3 py-2">
+                        <code className="font-mono text-[11px] flex-1 truncate">{viewRecordsDomain.verification_token}</code>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0"
+                          onClick={() => copyToClipboard(viewRecordsDomain.verification_token || '', 'txt-value')}
+                        >
+                          {copiedField === 'txt-value' ? (
+                            <Check className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {viewRecordsDomain?.verified ? (
-              <p className="text-[11px] text-green-600">
-                ✓ This domain has been verified and is active.
-              </p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground/60">
-                DNS changes can take up to 48 hours to propagate.
-              </p>
-            )}
+            {/* Status Legend */}
+            <div className="flex items-center gap-6 pt-2 border-t border-border/30">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <span className="text-[10px] text-muted-foreground">Verifying DNS</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="text-[10px] text-muted-foreground">Issuing SSL</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-[10px] text-muted-foreground">Active</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-[10px] text-muted-foreground">Failed</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              DNS changes can take from a few seconds to 48 hours to propagate. Click Verify to check status.
+            </p>
           </div>
-          <DialogFooter>
+          
+          <DialogFooter className="gap-2">
             <Button
+              variant="outline"
               size="sm"
               className="h-8 text-[12px]"
               onClick={() => setViewRecordsDomain(null)}
             >
-              Done
+              Close
             </Button>
+            {viewRecordsDomain && !viewRecordsDomain.verified && (
+              <Button
+                size="sm"
+                className="h-8 text-[12px]"
+                onClick={() => {
+                  handleVerify(viewRecordsDomain)
+                  setViewRecordsDomain(null)
+                }}
+              >
+                <ArrowsClockwise className="h-3.5 w-3.5 mr-1.5" />
+                Verify
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
