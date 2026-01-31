@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DomainsList } from '@/components/domains/domains-list'
 import { AddDomainButton } from '@/components/domains/add-domain-button'
-import type { Domain } from '@/types/database'
+import type { Domain, Form } from '@/types/database'
 
 export default async function DomainsPage() {
   const supabase = await createClient()
@@ -17,6 +17,15 @@ export default async function DomainsPage() {
     .order('created_at', { ascending: false })
 
   const domains = (domainsData || []) as Domain[]
+
+  // Fetch user's forms for Pretty URLs
+  const { data: formsData } = await supabase
+    .from('forms')
+    .select('id, title')
+    .eq('user_id', user.id)
+    .order('title', { ascending: true })
+
+  const forms = (formsData || []) as Pick<Form, 'id' | 'title'>[]
   
   const totalDomains = domains.length
   const verifiedDomains = domains.filter(d => d.verified).length
@@ -51,7 +60,7 @@ export default async function DomainsPage() {
         </div>
       </div>
 
-      <DomainsList domains={domains} userId={user.id} />
+      <DomainsList domains={domains} userId={user.id} forms={forms} />
     </div>
   )
 }

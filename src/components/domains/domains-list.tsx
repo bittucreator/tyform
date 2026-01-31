@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Globe, Trash, Check, Clock, Copy, DotsThree, FileText, ArrowsClockwise } from '@phosphor-icons/react'
+import { Globe, Trash, Check, Clock, Copy, DotsThree, FileText, ArrowsClockwise, Link as LinkIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -40,17 +40,20 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
-import type { Domain } from '@/types/database'
+import { PrettyUrls } from './pretty-urls'
+import type { Domain, Form } from '@/types/database'
 
 interface DomainsListProps {
   domains: Domain[]
   userId: string
+  forms: Pick<Form, 'id' | 'title'>[]
 }
 
-export function DomainsList({ domains: initialDomains }: DomainsListProps) {
+export function DomainsList({ domains: initialDomains, forms }: DomainsListProps) {
   const [domains, setDomains] = useState(initialDomains)
   const [deleteDomain, setDeleteDomain] = useState<Domain | null>(null)
   const [viewRecordsDomain, setViewRecordsDomain] = useState<Domain | null>(null)
+  const [manageUrlsDomain, setManageUrlsDomain] = useState<Domain | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [verifyingDomainId, setVerifyingDomainId] = useState<string | null>(null)
   const supabase = createClient()
@@ -185,6 +188,15 @@ export function DomainsList({ domains: initialDomains }: DomainsListProps) {
                           <FileText className="h-3.5 w-3.5 mr-2" />
                           View Records
                         </DropdownMenuItem>
+                        {domain.verified && (
+                          <DropdownMenuItem
+                            className="text-[12px]"
+                            onClick={() => setManageUrlsDomain(domain)}
+                          >
+                            <LinkIcon className="h-3.5 w-3.5 mr-2" />
+                            Manage URLs
+                          </DropdownMenuItem>
+                        )}
                         {!domain.verified && (
                           <DropdownMenuItem
                             className="text-[12px]"
@@ -428,6 +440,35 @@ export function DomainsList({ domains: initialDomains }: DomainsListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Manage URLs Dialog */}
+      <Dialog open={!!manageUrlsDomain} onOpenChange={() => setManageUrlsDomain(null)}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Manage URLs</DialogTitle>
+            <DialogDescription className="text-[13px]">
+              Create pretty URLs for your forms on <span className="font-medium text-foreground">{manageUrlsDomain?.domain}</span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {manageUrlsDomain && (
+              <PrettyUrls domain={manageUrlsDomain} forms={forms as Form[]} />
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[12px]"
+              onClick={() => setManageUrlsDomain(null)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
