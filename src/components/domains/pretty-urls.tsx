@@ -51,8 +51,16 @@ export function PrettyUrls({ domain, forms }: PrettyUrlsProps) {
   const [isDefault, setIsDefault] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   
   const supabase = createClient()
+
+  useEffect(() => {
+    // Get current user
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null)
+    })
+  }, [])
 
   useEffect(() => {
     loadUrls()
@@ -116,7 +124,8 @@ export function PrettyUrls({ domain, forms }: PrettyUrlsProps) {
             domain_id: domain.id,
             form_id: selectedForm,
             slug,
-            is_default: isDefault
+            is_default: isDefault,
+            user_id: userId
           })
 
         if (error) {
