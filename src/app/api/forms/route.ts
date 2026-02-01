@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { generateShortId } from '@/lib/short-id'
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -81,11 +82,29 @@ export async function POST(request: NextRequest) {
 
     const adminClient = getAdminClient()
 
+    // Generate a unique short_id with collision check
+    let shortId = generateShortId()
+    let attempts = 0
+    const maxAttempts = 5
+    
+    while (attempts < maxAttempts) {
+      const { data: existing } = await adminClient
+        .from('forms')
+        .select('id')
+        .eq('short_id', shortId)
+        .single()
+      
+      if (!existing) break
+      shortId = generateShortId()
+      attempts++
+    }
+
     const formData: Record<string, unknown> = {
       title: title.trim(),
       user_id: user.id,
       fields: [],
       is_published: false,
+      short_id: shortId,
     }
 
     if (workspaceId) {

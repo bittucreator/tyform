@@ -245,6 +245,8 @@ export interface Database {
           questions: Question[]
           settings: FormSettings
           is_published: boolean
+          short_id: string | null
+          workspace_id: string | null
           created_at: string
           updated_at: string
         }
@@ -256,6 +258,8 @@ export interface Database {
           questions?: Question[]
           settings?: FormSettings
           is_published?: boolean
+          short_id?: string | null
+          workspace_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -267,6 +271,8 @@ export interface Database {
           questions?: Question[]
           settings?: FormSettings
           is_published?: boolean
+          short_id?: string | null
+          workspace_id?: string | null
           created_at?: string
           updated_at?: string
         }

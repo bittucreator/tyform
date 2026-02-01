@@ -1045,14 +1045,17 @@ Tyform"
               </div>
               <div className="flex items-center gap-2 bg-muted/50 rounded-md px-3 py-2">
                 <code className="text-sm flex-1">
-                  https://www.tyform.com/f/{form.id}
+                  https://tyform.com/r/{(form as any).short_id || form.id.slice(0, 8)}
                 </code>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://www.tyform.com/f/${form.id}`)
+                    const shortUrl = (form as any).short_id 
+                      ? `https://tyform.com/r/${(form as any).short_id}`
+                      : `https://tyform.com/f/${form.id}`
+                    navigator.clipboard.writeText(shortUrl)
                     toast.success('URL copied to clipboard')
                   }}
                 >

@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormViewer } from '@/components/form-viewer'
 import { FormClosed } from '@/components/form-viewer/form-closed'
@@ -7,38 +7,25 @@ import { isUUID } from '@/lib/short-id'
 import type { Form } from '@/types/database'
 
 interface FormPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ shortId: string }>
 }
 
-export default async function FormPage({ params }: FormPageProps) {
-  const { id } = await params
+export default async function ShortFormPage({ params }: FormPageProps) {
+  const { shortId } = await params
   const supabase = await createClient()
 
-  let formData
-  let error
-
-  // Check if it's a UUID or a short_id
-  if (isUUID(id)) {
-    // Look up by UUID
-    const result = await supabase
-      .from('forms')
-      .select('*')
-      .eq('id', id)
-      .eq('is_published', true)
-      .single()
-    formData = result.data
-    error = result.error
-  } else {
-    // Look up by short_id
-    const result = await supabase
-      .from('forms')
-      .select('*')
-      .eq('short_id', id)
-      .eq('is_published', true)
-      .single()
-    formData = result.data
-    error = result.error
+  // If it's a UUID, redirect to the standard URL
+  if (isUUID(shortId)) {
+    redirect(`/f/${shortId}`)
   }
+
+  // Look up form by short_id
+  const { data: formData, error } = await supabase
+    .from('forms')
+    .select('*')
+    .eq('short_id', shortId)
+    .eq('is_published', true)
+    .single()
 
   if (error || !formData) {
     notFound()
