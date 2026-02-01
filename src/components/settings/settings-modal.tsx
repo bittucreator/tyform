@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, Globe, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon } from '@phosphor-icons/react'
+import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, Globe, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon, LockSimple } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -119,7 +119,7 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
     const [loadingBilling, setLoadingBilling] = useState(false)
     
     // Domains state
-    const [domains, setDomains] = useState<Array<{ id: string; domain: string; verification_token: string; status: 'pending' | 'verified' | 'failed'; created_at: string; verified_at?: string }>>([]) 
+    const [domains, setDomains] = useState<Array<{ id: string; domain: string; verification_token: string; status: 'pending' | 'verified' | 'failed'; created_at: string; verified_at?: string; sslReady?: boolean }>>([]) 
     const [loadingDomains, setLoadingDomains] = useState(false)
     const [newDomain, setNewDomain] = useState('')
     const [addingDomain, setAddingDomain] = useState(false)
@@ -633,9 +633,14 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
             
             if (response.ok) {
                 const data = await response.json()
-                setDomains(prev => prev.map(d => d.id === domainId ? { ...d, status: data.status, verified_at: data.verified_at } : d))
+                setDomains(prev => prev.map(d => d.id === domainId ? { 
+                    ...d, 
+                    status: data.status, 
+                    verified_at: data.verified_at,
+                    sslReady: data.vercelStatus === 'added'
+                } : d))
                 if (data.status === 'verified') {
-                    toast.success('Domain verified successfully!')
+                    toast.success('Domain verified and added to hosting!')
                 } else {
                     toast.error('Domain verification failed. Please check your DNS settings.')
                 }
@@ -1385,10 +1390,18 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                                                     <div className="flex items-center gap-2">
                                                         <p className="text-[13px] font-medium">{domain.domain}</p>
                                                         {domain.status === 'verified' ? (
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-1.5 py-0.5 rounded">
-                                                                <CheckCircle className="w-3 h-3" weight="fill" />
-                                                                Verified
-                                                            </span>
+                                                            <>
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-1.5 py-0.5 rounded">
+                                                                    <CheckCircle className="w-3 h-3" weight="fill" />
+                                                                    Verified
+                                                                </span>
+                                                                {domain.sslReady !== false && (
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                                                                        <LockSimple className="w-3 h-3" weight="fill" />
+                                                                        SSL
+                                                                    </span>
+                                                                )}
+                                                            </>
                                                         ) : domain.status === 'failed' ? (
                                                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded">
                                                                 <XCircle className="w-3 h-3" weight="fill" />

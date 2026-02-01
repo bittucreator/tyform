@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import dns from 'dns'
 import { promisify } from 'util'
+import { addDomainToVercel, isVercelConfigured } from '@/lib/vercel'
 
 const resolveCname = promisify(dns.resolveCname)
 const resolveTxt = promisify(dns.resolveTxt)
@@ -77,6 +78,18 @@ export async function POST(
     const status: 'verified' | 'failed' = txtValid ? 'verified' : 'failed'
     const verified_at = txtValid ? new Date().toISOString() : null
 
+    // If verified, add domain to Vercel for routing
+    let vercelStatus = null
+    if (txtValid && isVercelConfigured()) {
+        const vercelResult = await addDomainToVercel(domain.domain)
+        vercelStatus = vercelResult.success ? 'added' : vercelResult.error
+        
+        if (!vercelResult.success) {
+            console.error('Failed to add domain to Vercel:', vercelResult.error)
+            // Don't fail the whole request - domain is verified, Vercel can be retried
+        }
+    }
+
     // Update domain status
     const { error: updateError } = await adminClient
         .from('workspace_domains')
@@ -95,6 +108,7 @@ export async function POST(
     return NextResponse.json({ 
         status, 
         verified_at,
+        vercelStatus,
         details: {
             cname: { valid: cnameValid, expected: EXPECTED_CNAME },
             txt: { valid: txtValid, recordName: `${TXT_RECORD_NAME}.${domain.domain}` }
