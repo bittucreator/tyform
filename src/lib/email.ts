@@ -30,7 +30,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   const fromEmail = env.email.fromEmail
 
   try {
-    const response = await fetch('https://api.unosend.co/v1/emails', {
+    const response = await fetch('https://www.unosend.co/api/v1/emails', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
