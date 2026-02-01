@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto'
-import type { Form, Response, Webhook } from '@/types/database'
+import type { Form, Response, Webhook, WebhookLogInsert } from '@/types/database'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface WebhookPayload {
   event: 'response.created' | 'response.updated'
@@ -15,6 +16,14 @@ interface WebhookPayload {
   }
 }
 
+interface WebhookResult {
+  success: boolean
+  statusCode?: number
+  error?: string
+  durationMs?: number
+  responseBody?: string
+}
+
 /**
  * Generate HMAC signature for webhook payload
  */
@@ -28,7 +37,9 @@ function generateSignature(payload: string, secret: string): string {
 async function sendWebhook(
   webhook: Webhook,
   payload: WebhookPayload
-): Promise<{ success: boolean; statusCode?: number; error?: string }> {
+): Promise<WebhookResult> {
+  const startTime = Date.now()
+  
   try {
     const body = JSON.stringify(payload)
     
@@ -51,15 +62,68 @@ async function sendWebhook(
       body,
     })
     
+    // Try to get response body (truncate if too long)
+    let responseBody: string | undefined
+    try {
+      const text = await response.text()
+      responseBody = text.length > 1000 ? text.substring(0, 1000) + '...' : text
+    } catch {
+      // Ignore response body read errors
+    }
+    
     return {
       success: response.ok,
       statusCode: response.status,
+      durationMs: Date.now() - startTime,
+      responseBody,
     }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
+      durationMs: Date.now() - startTime,
     }
+  }
+}
+
+/**
+ * Log webhook delivery to database
+ */
+async function logWebhookDelivery(
+  formId: string,
+  responseId: string,
+  webhook: Webhook,
+  event: string,
+  payload: WebhookPayload,
+  result: WebhookResult
+): Promise<void> {
+  try {
+    const adminClient = createAdminClient()
+    
+    const logEntry: WebhookLogInsert = {
+      form_id: formId,
+      response_id: responseId,
+      webhook_id: webhook.id,
+      webhook_url: webhook.url,
+      event_type: event,
+      status: result.success ? 'success' : 'failed',
+      status_code: result.statusCode || null,
+      request_body: payload as unknown as Record<string, unknown>,
+      response_body: result.responseBody || null,
+      error_message: result.error || null,
+      duration_ms: result.durationMs || null,
+      retry_count: 0,
+    }
+    
+    const { error } = await adminClient
+      .from('webhook_logs')
+      .insert(logEntry)
+    
+    if (error) {
+      console.error('Failed to log webhook delivery:', error)
+    }
+  } catch (err) {
+    console.error('Error logging webhook delivery:', err)
   }
 }
 
@@ -70,7 +134,7 @@ export async function triggerWebhooks(
   form: Form,
   response: Response,
   event: 'response.created' | 'response.updated' = 'response.created'
-): Promise<{ webhook: Webhook; result: Awaited<ReturnType<typeof sendWebhook>> }[]> {
+): Promise<{ webhook: Webhook; result: WebhookResult }[]> {
   const webhooks = form.settings.webhooks || []
   const enabledWebhooks = webhooks.filter(
     (w) => w.enabled && w.events.includes(event)
@@ -96,10 +160,21 @@ export async function triggerWebhooks(
   
   // Send webhooks in parallel
   const results = await Promise.all(
-    enabledWebhooks.map(async (webhook) => ({
-      webhook,
-      result: await sendWebhook(webhook, payload),
-    }))
+    enabledWebhooks.map(async (webhook) => {
+      const result = await sendWebhook(webhook, payload)
+      
+      // Log the delivery attempt
+      await logWebhookDelivery(
+        form.id,
+        response.id,
+        webhook,
+        event,
+        payload,
+        result
+      )
+      
+      return { webhook, result }
+    })
   )
   
   // Log results for debugging
@@ -119,7 +194,7 @@ export async function testWebhook(
   webhook: Webhook,
   formId: string,
   formTitle: string
-): Promise<{ success: boolean; statusCode?: number; error?: string }> {
+): Promise<WebhookResult> {
   const testPayload: WebhookPayload = {
     event: 'response.created',
     timestamp: new Date().toISOString(),

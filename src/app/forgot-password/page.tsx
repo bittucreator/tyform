@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
       })
 
       if (error) throw error
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleResetPassword}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pb-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 pt-0">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>

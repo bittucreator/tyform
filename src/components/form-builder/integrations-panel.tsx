@@ -33,9 +33,11 @@ import {
   Check,
   SpinnerGap,
   ArrowSquareOut,
+  ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { nanoid } from 'nanoid'
+import { WebhookLogsDialog } from './webhook-logs-dialog'
 
 interface Integration {
   id: string
@@ -102,6 +104,7 @@ export function IntegrationsPanel({ open, onClose }: IntegrationsPanelProps) {
     integration: Integration | null
   }>({ open: false, type: null, integration: null })
   const [isSaving, setIsSaving] = useState(false)
+  const [webhookLogsOpen, setWebhookLogsOpen] = useState(false)
 
   const integrations: Integration[] = form.settings.integrations || []
 
@@ -282,15 +285,28 @@ export function IntegrationsPanel({ open, onClose }: IntegrationsPanelProps) {
                               </div>
                             </div>
                           ))}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground"
-                            onClick={() => openConfig(integrationTextT.type)}
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add another
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground"
+                              onClick={() => openConfig(integrationTextT.type)}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add another
+                            </Button>
+                            {integrationTextT.type === 'webhook' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground"
+                                onClick={() => setWebhookLogsOpen(true)}
+                              >
+                                <ClockCounterClockwise className="h-4 w-4 mr-1" />
+                                View logs
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -310,6 +326,13 @@ export function IntegrationsPanel({ open, onClose }: IntegrationsPanelProps) {
         onClose={closeConfig}
         onSave={saveIntegration}
         isSaving={isSaving}
+      />
+
+      {/* Webhook Logs Dialog */}
+      <WebhookLogsDialog
+        open={webhookLogsOpen}
+        onClose={() => setWebhookLogsOpen(false)}
+        formId={form.id}
       />
     </>
   )

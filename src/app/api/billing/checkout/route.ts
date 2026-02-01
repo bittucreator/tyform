@@ -1,20 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, NextRequest } from 'next/server'
 
-// Dodo Payments Product IDs
-const PRODUCT_IDS = {
-  pro: {
-    monthly: 'pdt_0NXXkfDdlkgiwCjiAXUMU', // $20/month
-    yearly: 'pdt_0NXXkoKA11QWPgPagGehN',  // $200/year (20% discount)
-  },
-} as const
-
 // Helper to get Dodo API base URL
 function getDodoBaseUrl(): string {
   const env = process.env.DODO_PAYMENTS_ENVIRONMENT
   return env === 'live_mode' 
     ? 'https://live.dodopayments.com' 
     : 'https://test.dodopayments.com'
+}
+
+// Helper to get product ID from environment
+function getProductId(plan: string, billingCycle: string): string | null {
+  if (plan === 'pro') {
+    if (billingCycle === 'monthly') {
+      return process.env.DODO_PRODUCT_PRO_MONTHLY || null
+    }
+    if (billingCycle === 'yearly') {
+      return process.env.DODO_PRODUCT_PRO_YEARLY || null
+    }
+  }
+  return null
 }
 
 // POST - Create a checkout session for upgrading plan
@@ -50,9 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get product ID based on plan and billing cycle
-    const productId = PRODUCT_IDS[plan as keyof typeof PRODUCT_IDS]?.[billingCycle as keyof typeof PRODUCT_IDS.pro]
+    const productId = getProductId(plan, billingCycle)
     if (!productId) {
-      return NextResponse.json({ error: 'Invalid plan or billing cycle' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Product not configured. Please set DODO_PRODUCT_PRO_MONTHLY and DODO_PRODUCT_PRO_YEARLY environment variables.',
+      }, { status: 501 })
     }
 
     // Get user profile for customer info
@@ -73,7 +80,8 @@ export async function POST(request: NextRequest) {
     const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/dashboard/${workspace?.slug || workspaceId}/settings?checkout=success`
 
     // Create checkout session with Dodo Payments API
-    const checkoutResponse = await fetch(`${getDodoBaseUrl()}/checkout_sessions`, {
+    // Docs: https://docs.dodopayments.com/api-reference/checkout-sessions/create
+    const checkoutResponse = await fetch(`${getDodoBaseUrl()}/checkouts`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -101,11 +109,22 @@ export async function POST(request: NextRequest) {
     })
 
     if (!checkoutResponse.ok) {
-      const errorData = await checkoutResponse.json().catch(() => ({}))
-      console.error('Dodo Payments checkout error:', errorData)
+      const errorText = await checkoutResponse.text()
+      let errorData = {}
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { rawError: errorText }
+      }
+      console.error('Dodo Payments checkout error:', {
+        status: checkoutResponse.status,
+        statusText: checkoutResponse.statusText,
+        error: errorData,
+      })
       return NextResponse.json({ 
         error: 'Failed to create checkout session',
         details: errorData,
+        status: checkoutResponse.status,
       }, { status: 500 })
     }
 
@@ -116,12 +135,13 @@ export async function POST(request: NextRequest) {
       billingCycle, 
       workspaceId, 
       userId: user.id,
-      checkoutUrl: checkoutData.checkout_url || checkoutData.url,
+      sessionId: checkoutData.session_id,
+      checkoutUrl: checkoutData.checkout_url,
     })
     
     return NextResponse.json({ 
-      url: checkoutData.checkout_url || checkoutData.url,
-      sessionId: checkoutData.id,
+      url: checkoutData.checkout_url,
+      sessionId: checkoutData.session_id,
     })
   } catch (error) {
     console.error('Error in POST /api/billing/checkout:', error)

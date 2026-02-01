@@ -14,11 +14,17 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
+  const type = searchParams.get('type') // 'recovery' for password reset
 
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
+      // If this is a password recovery, redirect to reset-password page
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/reset-password`)
+      }
+
       // Check if user has a workspace, if not create one
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {

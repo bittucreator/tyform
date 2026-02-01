@@ -470,6 +470,57 @@ export interface Database {
         }
         Relationships: []
       }
+      webhook_logs: {
+        Row: {
+          id: string
+          form_id: string
+          response_id: string | null
+          webhook_id: string
+          webhook_url: string
+          event_type: string
+          status: 'success' | 'failed' | 'pending'
+          status_code: number | null
+          request_body: Record<string, unknown> | null
+          response_body: string | null
+          error_message: string | null
+          duration_ms: number | null
+          retry_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          form_id: string
+          response_id?: string | null
+          webhook_id: string
+          webhook_url: string
+          event_type: string
+          status: 'success' | 'failed' | 'pending'
+          status_code?: number | null
+          request_body?: Record<string, unknown> | null
+          response_body?: string | null
+          error_message?: string | null
+          duration_ms?: number | null
+          retry_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          form_id?: string
+          response_id?: string | null
+          webhook_id?: string
+          webhook_url?: string
+          event_type?: string
+          status?: 'success' | 'failed' | 'pending'
+          status_code?: number | null
+          request_body?: Record<string, unknown> | null
+          response_body?: string | null
+          error_message?: string | null
+          duration_ms?: number | null
+          retry_count?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -488,3 +539,5 @@ export type Domain = Database['public']['Tables']['domains']['Row']
 export type DomainInsert = Database['public']['Tables']['domains']['Insert']
 export type DomainUrl = Database['public']['Tables']['domain_urls']['Row']
 export type DomainUrlInsert = Database['public']['Tables']['domain_urls']['Insert']
+export type WebhookLog = Database['public']['Tables']['webhook_logs']['Row']
+export type WebhookLogInsert = Database['public']['Tables']['webhook_logs']['Insert']
