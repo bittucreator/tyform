@@ -31,12 +31,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Image optimization
+  // Image optimization - allow any external images for user-uploaded content
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
       },
     ],
   },

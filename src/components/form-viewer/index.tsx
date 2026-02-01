@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -396,14 +397,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
         >
         {/* Cover Image - Landscape banner */}
         {thankYouProps.coverImage && (
-          <div className="w-full max-w-2xl mb-8">
-            <img
+          <div className="w-full max-w-2xl mb-8 relative h-40 md:h-56">
+            <Image
               src={thankYouProps.coverImage}
               alt="Cover"
-              className="w-full h-40 md:h-56 object-cover rounded-lg"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none'
-              }}
+              fill
+              className="object-cover rounded-lg"
+              unoptimized
             />
           </div>
         )}
@@ -416,13 +416,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
           {/* Screen Image - Centered (replaces check icon if provided) */}
           {thankYouProps.screenImage ? (
             <div className="flex justify-center mb-6">
-              <img
+              <Image
                 src={thankYouProps.screenImage}
                 alt="Thank you"
-                className="max-w-36 max-h-36 object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
+                width={144}
+                height={144}
+                className="object-contain"
+                unoptimized
               />
             </div>
           ) : (
@@ -749,14 +749,13 @@ function QuestionRenderer({
       <div className="text-center">
         {/* Cover Image - Landscape banner */}
         {question.properties.coverImage && (
-          <div className="mb-8 -mx-4 md:-mx-8">
-            <img
+          <div className="mb-8 -mx-4 md:-mx-8 relative h-40 md:h-56">
+            <Image
               src={question.properties.coverImage}
               alt="Cover"
-              className="w-full h-40 md:h-56 object-cover rounded-lg"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none'
-              }}
+              fill
+              className="object-cover rounded-lg"
+              unoptimized
             />
           </div>
         )}
@@ -764,13 +763,13 @@ function QuestionRenderer({
         {/* Screen Image - Centered */}
         {question.properties.screenImage && (
           <div className="flex justify-center mb-6">
-            <img
+            <Image
               src={question.properties.screenImage}
               alt="Screen"
-              className="max-w-36 max-h-36 object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none'
-              }}
+              width={144}
+              height={144}
+              className="object-contain"
+              unoptimized
             />
           </div>
         )}
@@ -1524,14 +1523,13 @@ function QuestionRenderer({
               
               {/* Product image - landscape */}
               {question.properties.productImage && (
-                <div className="w-full">
-                  <img
+                <div className="w-full relative h-48">
+                  <Image
                     src={question.properties.productImage}
                     alt={question.properties.productName || 'Product'}
-                    className="w-full h-48 object-cover rounded-lg"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
+                    fill
+                    className="object-cover rounded-lg"
+                    unoptimized
                   />
                 </div>
               )}
