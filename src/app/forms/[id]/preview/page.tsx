@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FormViewer } from '@/components/form-viewer'
@@ -103,7 +103,9 @@ export default function PreviewPage({ params }: PreviewPageProps) {
 
       {/* Form Preview */}
       <div className="flex-1">
-        <FormViewer form={form} isPreview />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Loading...</div></div>}>
+          <FormViewer form={form} isPreview />
+        </Suspense>
       </div>
     </div>
   )

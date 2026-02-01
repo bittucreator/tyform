@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormViewer } from '@/components/form-viewer'
@@ -59,5 +60,20 @@ export default async function FormPage({ params }: FormPageProps) {
     return <FormClosed message={accessStatus.message} theme={form.settings.theme} />
   }
 
-  return <FormViewer form={form} />
+  return (
+    <Suspense fallback={<FormLoadingFallback />}>
+      <FormViewer form={form} />
+    </Suspense>
+  )
+}
+
+function FormLoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-pulse flex flex-col items-center gap-4">
+        <div className="h-12 w-12 rounded-full bg-muted" />
+        <div className="h-4 w-32 bg-muted rounded" />
+      </div>
+    </div>
+  )
 }
