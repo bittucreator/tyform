@@ -86,12 +86,14 @@ function buildUrl(path: string): string {
 
 /**
  * Add a custom domain to the Vercel project
+ * Also adds the www. variant that redirects to the main domain
  */
 export async function addDomainToVercel(domain: string): Promise<AddDomainResponse> {
   try {
     const projectId = getProjectId()
     const url = buildUrl(`/v10/projects/${projectId}/domains`)
     
+    // Add the main domain
     const response = await fetch(url, {
       method: 'POST',
       headers: getVercelHeaders(),
@@ -121,6 +123,25 @@ export async function addDomainToVercel(domain: string): Promise<AddDomainRespon
       }
     }
     
+    // Also add www. variant if this is an apex domain (no subdomain)
+    const isApexDomain = domain.split('.').length === 2
+    if (isApexDomain) {
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: getVercelHeaders(),
+          body: JSON.stringify({ 
+            name: `www.${domain}`,
+            redirect: domain, // Redirect www to apex
+            redirectStatusCode: 308,
+          }),
+        })
+      } catch {
+        // Ignore www errors - main domain was added successfully
+        console.log(`Note: Could not add www.${domain} variant`)
+      }
+    }
+    
     return {
       success: true,
       domain: data,
@@ -141,6 +162,7 @@ export async function addDomainToVercel(domain: string): Promise<AddDomainRespon
 
 /**
  * Remove a custom domain from the Vercel project
+ * Also removes the www. variant if it exists
  */
 export async function removeDomainFromVercel(domain: string): Promise<RemoveDomainResponse> {
   try {
@@ -157,6 +179,20 @@ export async function removeDomainFromVercel(domain: string): Promise<RemoveDoma
       return {
         success: false,
         error: data.error?.message || 'Failed to remove domain from Vercel',
+      }
+    }
+    
+    // Also try to remove www. variant
+    const isApexDomain = domain.split('.').length === 2
+    if (isApexDomain) {
+      try {
+        const wwwUrl = buildUrl(`/v9/projects/${projectId}/domains/www.${domain}`)
+        await fetch(wwwUrl, {
+          method: 'DELETE',
+          headers: getVercelHeaders(),
+        })
+      } catch {
+        // Ignore - www variant might not exist
       }
     }
     

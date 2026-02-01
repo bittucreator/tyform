@@ -32,7 +32,8 @@ export async function proxy(request: NextRequest) {
 
 async function handleCustomDomain(request: NextRequest, host: string): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname
-  const cleanHost = host.replace(/:\d+$/, '')
+  // Remove port and www. prefix for domain lookup
+  const cleanHost = host.replace(/:\d+$/, '').replace(/^www\./, '')
   
   // Skip static files
   if (pathname.startsWith('/_next') || pathname.startsWith('/api')) {
