@@ -241,7 +241,7 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
       
       const response = await fetch('/api/forms/submit', {
         method: 'POST',
-        headers: { 'Content-TextT': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           formId: form.id,
           answers,
