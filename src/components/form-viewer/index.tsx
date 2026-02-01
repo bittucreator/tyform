@@ -56,6 +56,7 @@ import { SignatureInput } from './signature-input'
 import { RankingInput } from './ranking-input'
 import { PoweredByBadge } from './powered-by-badge'
 import { GoogleFontLoader } from '@/components/google-font-loader'
+import { validateAnswer } from '@/lib/form-validation'
 import type { Form, Question, Json } from '@/types/database'
 
 interface FormViewerProps {
@@ -72,6 +73,7 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showResumePrompt, setShowResumePrompt] = useState(false)
   const [lastSaveTime, setLastSaveTime] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
   const geoDataRef = useRef<{ country?: string; city?: string; region?: string; latitude?: number; longitude?: number } | null>(null)
   const analyticsInitialized = useRef(false)
 
@@ -194,12 +196,23 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
     if (!currentQuestion) return false
     if (currentQuestion.type === 'welcome') return true
     if (currentQuestion.type === 'thank_you') return false
-    if (!currentQuestion.required) return true
     
     const answer = answers[currentQuestion.id]
-    if (answer === undefined || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
+    
+    // If not required and empty, can proceed
+    if (!currentQuestion.required && (answer === undefined || answer === '' || (Array.isArray(answer) && answer.length === 0))) {
+      setValidationError(null)
+      return true
+    }
+    
+    // Run validation
+    const validation = validateAnswer(currentQuestion, answer as Json)
+    if (!validation.isValid) {
+      setValidationError(validation.error || 'Invalid input')
       return false
     }
+    
+    setValidationError(null)
     return true
   }, [currentQuestion, answers])
 
@@ -283,10 +296,12 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
   const handlePrevious = () => {
     const prevIndex = getPreviousQuestionIndex(currentIndex, questions, answers)
     setCurrentIndex(prevIndex)
+    setValidationError(null) // Clear validation error when going back
   }
 
   const setAnswer = (questionId: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value as Json }))
+    setValidationError(null) // Clear validation error when answer changes
     // Track that this question was answered (skip in preview mode)
     if (!isPreview) {
       trackQuestionComplete(questionId)
@@ -511,6 +526,7 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
           canGoNext={canGoNext()}
           isSubmitting={isSubmitting}
           isLastQuestion={getNextQuestionIndex(currentIndex, questions, answers) >= questions.length}
+          validationError={validationError}
         />
       </motion.div>
     </AnimatePresence>
@@ -643,6 +659,7 @@ export function FormViewer({ form, submissionCount = 0, isPreview = false }: For
                 canGoNext={canGoNext()}
                 isSubmitting={isSubmitting}
                 isLastQuestion={getNextQuestionIndex(currentIndex, questions, answers) >= questions.length}
+                validationError={validationError}
               />
             </motion.div>
           </AnimatePresence>
@@ -701,6 +718,7 @@ interface QuestionRendererProps {
   canGoNext: boolean
   isSubmitting: boolean
   isLastQuestion: boolean
+  validationError?: string | null
 }
 
 function QuestionRenderer({
@@ -716,6 +734,7 @@ function QuestionRenderer({
   canGoNext,
   isSubmitting,
   isLastQuestion,
+  validationError,
 }: QuestionRendererProps) {
   if (!question) return null
 
@@ -1554,6 +1573,18 @@ function QuestionRenderer({
           )
         })()}
       </div>
+
+      {/* Validation error message */}
+      {validationError && (
+        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+          <p className="text-sm text-red-500 flex items-center gap-2">
+            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {validationError}
+          </p>
+        </div>
+      )}
 
       {/* Submit/Next button */}
       <button
