@@ -59,5 +59,5 @@ export default async function FormPage({ params }: FormPageProps) {
     return <FormClosed message={accessStatus.message} theme={form.settings.theme} />
   }
 
-  return <FormViewer form={form} submissionCount={submissionCount || 0} />
+  return <FormViewer form={form} />
 }

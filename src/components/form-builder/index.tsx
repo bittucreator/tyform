@@ -41,7 +41,7 @@ export function FormBuilder({ form }: FormBuilderProps) {
       questions: form.questions || [],
       settings: form.settings,
       is_published: form.is_published,
-      short_id: (form as any).short_id,
+      short_id: form.short_id,
     })
     setIsPublished(form.is_published)
   }, [form, setForm])

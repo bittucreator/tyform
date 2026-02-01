@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
@@ -24,11 +23,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { CaretDown, CaretUp, Check, Star, FloppyDisk, ArrowCounterClockwise, CalendarBlank } from '@phosphor-icons/react'
-import { format, parse } from 'date-fns'
+import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { getBackgroundStyle, getButtonRadius, type FormTheme } from '@/lib/themes'
 import { 
-  shouldShowQuestion, 
   getNextQuestionIndex, 
   getPreviousQuestionIndex,
   getVisibleQuestions 
@@ -61,11 +59,10 @@ import type { Form, Question, Json } from '@/types/database'
 
 interface FormViewerProps {
   form: Form
-  submissionCount?: number
   isPreview?: boolean
 }
 
-export function FormViewer({ form, submissionCount = 0, isPreview = false }: FormViewerProps) {
+export function FormViewer({ form, isPreview = false }: FormViewerProps) {
   const searchParams = useSearchParams()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<string, Json>>({})

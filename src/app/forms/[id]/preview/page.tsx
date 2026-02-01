@@ -103,7 +103,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
 
       {/* Form Preview */}
       <div className="flex-1">
-        <FormViewer form={form} submissionCount={0} isPreview />
+        <FormViewer form={form} isPreview />
       </div>
     </div>
   )
