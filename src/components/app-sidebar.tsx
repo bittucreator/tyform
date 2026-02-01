@@ -17,6 +17,7 @@ import {
   Globe,
   Code,
   Sparkle,
+  CreditCard,
 } from '@phosphor-icons/react'
 
 import {
@@ -253,29 +254,50 @@ export function AppSidebar() {
               ))}
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/members'}
                   tooltip="Members"
-                  onClick={() => { setSettingsTab('members'); setSettingsOpen(true) }}
                 >
-                  <Users />
-                  <span>Members</span>
+                  <Link href="/members">
+                    <Users />
+                    <span>Members</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/domains'}
                   tooltip="Domains"
-                  onClick={() => { setSettingsTab('domains'); setSettingsOpen(true) }}
                 >
-                  <Globe />
-                  <span>Domains</span>
+                  <Link href="/domains">
+                    <Globe />
+                    <span>Domains</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/api'}
                   tooltip="API"
-                  onClick={() => { setSettingsTab('api'); setSettingsOpen(true) }}
                 >
-                  <Code />
-                  <span>API</span>
+                  <Link href="/api">
+                    <Code />
+                    <span>API</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/billing'}
+                  tooltip="Billing"
+                >
+                  <Link href="/billing">
+                    <CreditCard />
+                    <span>Billing</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

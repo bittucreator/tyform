@@ -21,14 +21,17 @@ import {
 } from '@/components/ui/select'
 import { Envelope, PaperPlaneTilt, SpinnerGap } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useWorkspace } from '@/store/workspace'
 
 interface InviteMemberModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
 }
 
-export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps) {
+export function InviteMemberModal({ open, onOpenChange, onSuccess }: InviteMemberModalProps) {
   const router = useRouter()
+  const { activeWorkspace } = useWorkspace()
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('Member')
   const [isLoading, setIsLoading] = useState(false)
@@ -41,13 +44,18 @@ export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps
       return
     }
 
+    if (!activeWorkspace) {
+      toast.error('Please select a workspace first')
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const response = await fetch('/api/invitations', {
         method: 'POST',
-        headers: { 'Content-TextT': 'application/json' },
-        body: JSON.stringify({ email, role }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role, workspaceId: activeWorkspace.id }),
       })
 
       const data = await response.json()
@@ -65,6 +73,7 @@ export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps
       setEmail('')
       setRole('Member')
       onOpenChange(false)
+      onSuccess?.()
       router.refresh()
 
     } catch (error) {
@@ -77,11 +86,11 @@ export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-130">
         <DialogHeader>
           <DialogTitle className="text-[17px]">Invite team member</DialogTitle>
           <DialogDescription className="text-[13px]">
-            PaperPlaneTilt an email invitation to join your workspace
+            Send an email invitation to join your workspace
           </DialogDescription>
         </DialogHeader>
 
@@ -105,25 +114,25 @@ export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps
           <div className="space-y-2">
             <Label htmlFor="role" className="text-[13px]">Role</Label>
             <Select value={role} onValueChange={setRole} disabled={isLoading}>
-              <SelectTrigger className="h-10 text-[13px]">
+              <SelectTrigger className="h-10 text-[13px] w-full">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin" className="text-[13px]">
-                  <div className="flex flex-col">
-                    <span>Admin</span>
+              <SelectContent position="popper" sideOffset={4} className="w-[calc(var(--radix-select-trigger-width))]">
+                <SelectItem value="Admin" textValue="Admin" className="text-[13px] py-2.5">
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <span className="font-medium">Admin</span>
                     <span className="text-[11px] text-muted-foreground">Full access to all features</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="Member" className="text-[13px]">
-                  <div className="flex flex-col">
-                    <span>Member</span>
+                <SelectItem value="Member" textValue="Member" className="text-[13px] py-2.5">
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <span className="font-medium">Member</span>
                     <span className="text-[11px] text-muted-foreground">Can create and manage forms</span>
                   </div>
                 </SelectItem>
-                <SelectItem value="Viewer" className="text-[13px]">
-                  <div className="flex flex-col">
-                    <span>Viewer</span>
+                <SelectItem value="Viewer" textValue="Viewer" className="text-[13px] py-2.5">
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <span className="font-medium">Viewer</span>
                     <span className="text-[11px] text-muted-foreground">Can only view forms and responses</span>
                   </div>
                 </SelectItem>
@@ -149,12 +158,12 @@ export function InviteMemberModal({ open, onOpenChange }: InviteMemberModalProps
               {isLoading ? (
                 <>
                   <SpinnerGap className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  PaperPlaneTilting...
+                  Sending...
                 </>
               ) : (
                 <>
                   <PaperPlaneTilt className="h-3.5 w-3.5 mr-1.5" />
-                  PaperPlaneTilt Invitation
+                  Send Invitation
                 </>
               )}
             </Button>

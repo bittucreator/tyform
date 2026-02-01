@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button'
 import { UserPlus } from '@phosphor-icons/react'
 import { InviteMemberModal } from './invite-member-modal'
 
-export function InviteMemberButton() {
+interface InviteMemberButtonProps {
+  onSuccess?: () => void
+}
+
+export function InviteMemberButton({ onSuccess }: InviteMemberButtonProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -14,7 +18,7 @@ export function InviteMemberButton() {
         <UserPlus className="h-3.5 w-3.5 mr-1.5" />
         Invite
       </Button>
-      <InviteMemberModal open={open} onOpenChange={setOpen} />
+      <InviteMemberModal open={open} onOpenChange={setOpen} onSuccess={onSuccess} />
     </>
   )
 }

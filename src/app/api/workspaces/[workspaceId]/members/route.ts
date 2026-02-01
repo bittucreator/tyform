@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendEmail, emailTemplates } from '@/lib/email'
 import { env } from '@/lib/env'
 import { randomBytes } from 'crypto'
 
@@ -225,40 +224,67 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // Send invitation email
+    // Send invitation email via Supabase
     const inviteLink = `${env.app.url}/invite/${inviteToken}`
-    const emailContent = emailTemplates.workspaceInvitation({
-      inviterName,
-      workspaceName,
-      inviteLink,
-      role: role || 'member',
-    })
+    
+    try {
+      // Use Supabase's invite functionality which sends email via configured SMTP
+      const { error: supabaseInviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        redirectTo: inviteLink,
+        data: {
+          invited_to_workspace: workspaceId,
+          invited_by: inviterName,
+          workspace_name: workspaceName,
+          role: role || 'member',
+        }
+      })
 
-    const emailResult = await sendEmail({
-      to: email,
-      subject: emailContent.subject,
-      html: emailContent.html,
-      text: emailContent.text,
-    })
+      let emailSent = true
+      
+      if (supabaseInviteError) {
+        console.error('Supabase invite error:', supabaseInviteError)
+        // If user already exists, send magic link instead
+        if (supabaseInviteError.message.includes('already registered')) {
+          const { error: magicLinkError } = await adminClient.auth.admin.generateLink({
+            type: 'magiclink',
+            email,
+            options: {
+              redirectTo: inviteLink,
+            }
+          })
+          
+          if (magicLinkError) {
+            emailSent = false
+            console.warn('Failed to send magic link:', magicLinkError)
+          }
+        } else {
+          emailSent = false
+        }
+      }
 
-    // Update invitation with email status
-    if (invitation) {
-      await adminClient
-        .from('team_invitations')
-        .update({
-          email_sent: emailResult.success,
-          email_sent_at: emailResult.success ? new Date().toISOString() : null,
+      // Update invitation with email status
+      if (invitation) {
+        await adminClient
+          .from('team_invitations')
+          .update({
+            email_sent: emailSent,
+            email_sent_at: emailSent ? new Date().toISOString() : null,
+          })
+          .eq('id', invitation.id)
+      }
+
+      if (!emailSent) {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Invitation created but email could not be sent',
         })
-        .eq('id', invitation.id)
-    }
+      }
 
-    if (!emailResult.success) {
-      console.warn('Failed to send invitation email:', emailResult.error)
-      // Still return success since the invitation was created
+    } catch (emailError) {
+      console.error('Error sending invitation email:', emailError)
       return NextResponse.json({ 
         success: true, 
         message: 'Invitation created but email could not be sent',
-        emailError: emailResult.error 
       })
     }
 

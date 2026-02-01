@@ -9,7 +9,7 @@ export default async function MembersPage() {
   if (!user) redirect('/login')
 
   return (
-    <div className="p-6 max-auto">
+    <div className="max-w-7xl mx-auto p-6">
       <MembersList />
     </div>
   )

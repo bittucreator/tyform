@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendInvitationEmail } from '@/lib/unosend'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { nanoid } from 'nanoid'
 
 interface TeamInvitation {
@@ -29,10 +29,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { email, role = 'Member' } = await request.json()
+    const { email, role = 'Member', workspaceId } = await request.json()
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: 'Workspace ID is required' }, { status: 400 })
     }
 
     // Validate email format
@@ -41,16 +45,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
-    // Check if user is already a member
-    const { data: existingMember } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .eq('workspace_owner_id', user.id)
+    // Check if user is a member of this workspace (and has permission to invite)
+    const { data: membershipData } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
       .single()
 
-    if (existingMember) {
-      return NextResponse.json({ error: 'User is already a member of this workspace' }, { status: 400 })
+    const membership = membershipData as { role: string } | null
+
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      return NextResponse.json({ error: 'You do not have permission to invite members' }, { status: 403 })
+    }
+
+    // Check if invitee is already a member by looking up their profile first
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single()
+
+    if (profileData) {
+      const { data: existingMember } = await supabase
+        .from('workspace_members')
+        .select('id')
+        .eq('workspace_id', workspaceId)
+        .eq('user_id', profileData.id)
+        .single()
+
+      if (existingMember) {
+        return NextResponse.json({ error: 'User is already a member of this workspace' }, { status: 400 })
+      }
     }
 
     // Check if there's already a pending invitation
@@ -58,7 +84,7 @@ export async function POST(request: Request) {
       .from('team_invitations')
       .select('id, status')
       .eq('email', email.toLowerCase())
-      .eq('inviter_id', user.id)
+      .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
       .single()
 
@@ -77,7 +103,8 @@ export async function POST(request: Request) {
       .insert({
         email: email.toLowerCase(),
         inviter_id: user.id,
-        role,
+        workspace_id: workspaceId,
+        role: role.toLowerCase(),
         token: inviteToken,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
@@ -92,23 +119,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // Get inviter info
+    // Get inviter info and workspace name
     const inviterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Someone'
-    const workspaceName = `${inviterName}'s Workspace`
+    
+    // Get workspace name
+    const { data: workspaceData } = await supabase
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single()
+    
+    const workspaceInfo = workspaceData as { name: string } | null
+    const workspaceName = workspaceInfo?.name || `${inviterName}'s Workspace`
 
     // Generate invite link
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/invite/${inviteToken}`
 
-    // Send invitation email
+    // Send invitation email via Supabase
     try {
-      await sendInvitationEmail({
-        to: email,
-        inviterName,
-        workspaceName,
-        inviteLink,
-        role,
+      const adminClient = createAdminClient()
+      
+      // Use Supabase's invite functionality which sends email via configured SMTP
+      const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        redirectTo: inviteLink,
+        data: {
+          invited_to_workspace: workspaceId,
+          invited_by: inviterName,
+          workspace_name: workspaceName,
+          role: role.toLowerCase(),
+        }
       })
+
+      if (inviteError) {
+        console.error('Supabase invite error:', inviteError)
+        // If user already exists, we still want to send them a notification
+        // Fall back to magic link
+        if (inviteError.message.includes('already registered')) {
+          // User exists, send magic link instead
+          const { error: magicLinkError } = await adminClient.auth.admin.generateLink({
+            type: 'magiclink',
+            email,
+            options: {
+              redirectTo: inviteLink,
+            }
+          })
+          
+          if (magicLinkError) {
+            throw magicLinkError
+          }
+        } else {
+          throw inviteError
+        }
+      }
 
       // Update invitation to mark email as sent
       await supabase
