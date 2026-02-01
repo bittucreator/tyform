@@ -78,7 +78,7 @@ export function FormCard({ form }: FormCardProps) {
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <Link href={`/forms/${form.id}/edit`}>
+              <Link href={`/forms/${form.id}/responses`}>
                 <h3 className="font-semibold text-lg text-foreground truncate hover:underline transition-colors">
                   {form.title}
                 </h3>

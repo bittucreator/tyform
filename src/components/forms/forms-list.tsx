@@ -153,7 +153,7 @@ export function FormsList({ forms: initialForms, responseCountMap }: FormsListPr
               <div 
                 key={form.id} 
                 className="group flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer"
-                onClick={() => router.push(`/forms/${form.id}/edit`)}
+                onClick={() => router.push(`/forms/${form.id}/responses`)}
               >
                 {/* Icon */}
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${

@@ -172,7 +172,7 @@ export function FormsList({ forms: initialForms, responseCountMap }: FormsListPr
                   <TableRow 
                     key={form.id} 
                     className="group cursor-pointer"
-                    onClick={() => router.push(`/forms/${form.id}/edit`)}
+                    onClick={() => router.push(`/forms/${form.id}/responses`)}
                   >
                     <TableCell>
                       <Link 
