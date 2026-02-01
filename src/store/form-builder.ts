@@ -10,6 +10,7 @@ interface FormBuilderState {
     questions: Question[]
     settings: FormSettings
     isPublished: boolean
+    short_id?: string | null
   }
   selectedQuestionId: string | null
   isDirty: boolean
