@@ -18,7 +18,7 @@ function isCustomDomain(host: string): boolean {
   )
 }
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const host = request.headers.get('host') || ''
   
   // If it's a custom domain, handle it specially

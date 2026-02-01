@@ -1045,14 +1045,14 @@ Tyform"
               </div>
               <div className="flex items-center gap-2 bg-muted/50 rounded-md px-3 py-2">
                 <code className="text-sm flex-1">
-                  {typeof window !== 'undefined' ? window.location.origin : 'https://tyform.app'}/forms/{form.id}
+                  https://www.tyform.com/f/{form.id}
                 </code>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7"
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/forms/${form.id}`)
+                    navigator.clipboard.writeText(`https://www.tyform.com/f/${form.id}`)
                     toast.success('URL copied to clipboard')
                   }}
                 >
