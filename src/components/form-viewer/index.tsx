@@ -190,7 +190,26 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     '--form-bg': theme.backgroundColor,
   } as React.CSSProperties), [theme])
 
+  // Pure check without side effects - safe to call during render
   const canGoNext = useCallback(() => {
+    if (!currentQuestion) return false
+    if (currentQuestion.type === 'welcome') return true
+    if (currentQuestion.type === 'thank_you') return false
+    
+    const answer = answers[currentQuestion.id]
+    
+    // If not required and empty, can proceed
+    if (!currentQuestion.required && (answer === undefined || answer === '' || (Array.isArray(answer) && answer.length === 0))) {
+      return true
+    }
+    
+    // Run validation
+    const validation = validateAnswer(currentQuestion, answer as Json)
+    return validation.isValid
+  }, [currentQuestion, answers])
+
+  // Validate and set error - only call on user action, not during render
+  const validateAndProceed = useCallback(() => {
     if (!currentQuestion) return false
     if (currentQuestion.type === 'welcome') return true
     if (currentQuestion.type === 'thank_you') return false
@@ -291,6 +310,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     }
   }, [currentIndex, questions, answers, handleSubmit])
 
+  // Combined handler: validate first, then proceed
+  const handleNextWithValidation = useCallback(() => {
+    if (validateAndProceed()) {
+      handleNext()
+    }
+  }, [validateAndProceed, handleNext])
+
   const handlePrevious = () => {
     const prevIndex = getPreviousQuestionIndex(currentIndex, questions, answers)
     setCurrentIndex(prevIndex)
@@ -311,13 +337,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
-        if (canGoNext()) handleNext()
+        handleNextWithValidation()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [canGoNext, handleNext])
+  }, [handleNextWithValidation])
 
   // Show resume prompt for partial submissions
   if (showResumePrompt) {
@@ -487,7 +513,7 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
         <Button
           variant="outline"
           size="icon"
-          onClick={handleNext}
+          onClick={handleNextWithValidation}
           disabled={!canGoNext()}
           style={{ 
             borderColor: `${theme.textColor}30`,
@@ -519,7 +545,7 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
           questionNumber={form.settings.showQuestionNumbers ? currentVisibleIndex + 1 : undefined}
           theme={theme}
           formId={form.id}
-          onNext={handleNext}
+          onNext={handleNextWithValidation}
           canGoNext={canGoNext()}
           isSubmitting={isSubmitting}
           isLastQuestion={getNextQuestionIndex(currentIndex, questions, answers) >= questions.length}
@@ -652,7 +678,7 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
                 questionNumber={form.settings.showQuestionNumbers ? currentVisibleIndex + 1 : undefined}
                 theme={theme}
                 formId={form.id}
-                onNext={handleNext}
+                onNext={handleNextWithValidation}
                 canGoNext={canGoNext()}
                 isSubmitting={isSubmitting}
                 isLastQuestion={getNextQuestionIndex(currentIndex, questions, answers) >= questions.length}
@@ -681,7 +707,7 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
           <Button
             variant="outline"
             size="icon"
-            onClick={handleNext}
+            onClick={handleNextWithValidation}
             disabled={!canGoNext()}
             style={{ 
               borderColor: `${theme.textColor}30`,
