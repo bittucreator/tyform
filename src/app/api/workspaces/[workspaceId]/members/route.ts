@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmail, emailTemplates } from '@/lib/email'
+import { env } from '@/lib/env'
+import { randomBytes } from 'crypto'
 
 interface WorkspaceMember {
   id: string
@@ -73,7 +76,7 @@ export async function GET(
 
     // Fetch pending invitations for this workspace
     const { data: invitationsData } = await adminClient
-      .from('workspace_invitations')
+      .from('team_invitations')
       .select('*')
       .eq('workspace_id', workspaceId)
       .eq('status', 'pending')
@@ -177,16 +180,41 @@ export async function POST(
       return NextResponse.json({ success: true, message: 'Member added successfully' })
     }
 
+    // Generate a secure token for the invitation
+    const inviteToken = randomBytes(32).toString('hex')
+
+    // Get workspace name for the email
+    const { data: workspace } = await adminClient
+      .from('workspaces')
+      .select('name')
+      .eq('id', workspaceId)
+      .single()
+
+    const workspaceName = workspace?.name || 'a workspace'
+
+    // Get inviter's name for the email
+    const { data: inviterProfile } = await adminClient
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', user.id)
+      .single()
+
+    const inviterName = inviterProfile?.full_name || inviterProfile?.email?.split('@')[0] || 'A team member'
+
     // Create an invitation for non-existing users
-    const { error: inviteError } = await adminClient
-      .from('workspace_invitations')
+    const { data: invitation, error: inviteError } = await adminClient
+      .from('team_invitations')
       .insert({
         workspace_id: workspaceId,
         email: email,
         role: role || 'member',
-        invited_by: user.id,
+        inviter_id: user.id,
+        token: inviteToken,
+        status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
       })
+      .select('id')
+      .single()
 
     if (inviteError) {
       // Check if invitation already exists
@@ -197,9 +225,44 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // TODO: Send invitation email
+    // Send invitation email
+    const inviteLink = `${env.app.url}/invite/${inviteToken}`
+    const emailContent = emailTemplates.workspaceInvitation({
+      inviterName,
+      workspaceName,
+      inviteLink,
+      role: role || 'member',
+    })
 
-    return NextResponse.json({ success: true, message: 'Invitation sent' })
+    const emailResult = await sendEmail({
+      to: email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
+    })
+
+    // Update invitation with email status
+    if (invitation) {
+      await adminClient
+        .from('team_invitations')
+        .update({
+          email_sent: emailResult.success,
+          email_sent_at: emailResult.success ? new Date().toISOString() : null,
+        })
+        .eq('id', invitation.id)
+    }
+
+    if (!emailResult.success) {
+      console.warn('Failed to send invitation email:', emailResult.error)
+      // Still return success since the invitation was created
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Invitation created but email could not be sent',
+        emailError: emailResult.error 
+      })
+    }
+
+    return NextResponse.json({ success: true, message: 'Invitation sent successfully' })
   } catch (error) {
     console.error('Error in POST /api/workspaces/[workspaceId]/members:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

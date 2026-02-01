@@ -5,6 +5,7 @@ interface TeamInvitation {
   id: string
   email: string
   inviter_id: string
+  workspace_id: string | null
   role: string
   token: string
   status: string
@@ -62,13 +63,26 @@ export async function GET(
       inviterName = 'A team member'
     }
 
+    // Get workspace name if workspace_id exists
+    let workspaceName = `${inviterName}'s Workspace`
+    if (invitation.workspace_id) {
+      const { data: workspace } = await supabase
+        .from('workspaces')
+        .select('name')
+        .eq('id', invitation.workspace_id)
+        .single() as { data: { name: string } | null }
+      if (workspace?.name) {
+        workspaceName = workspace.name
+      }
+    }
+
     return NextResponse.json({
       invitation: {
         id: invitation.id,
         email: invitation.email,
         role: invitation.role,
         inviterName,
-        workspaceName: `${inviterName}'s Workspace`,
+        workspaceName,
         expiresAt: invitation.expires_at,
       },
     })
@@ -123,21 +137,42 @@ export async function POST(
       }, { status: 403 })
     }
 
-    // Add user to team_members
-    const { error: memberError } = await supabase
-      .from('team_members')
-      .insert({
-        user_id: user.id,
-        email: user.email?.toLowerCase(),
-        workspace_owner_id: invitation.inviter_id,
-        role: invitation.role,
-        invited_by: invitation.inviter_id,
-        joined_at: new Date().toISOString(),
-      } as never)
+    // Add user to workspace_members if workspace_id exists
+    if (invitation.workspace_id) {
+      const { error: memberError } = await supabase
+        .from('workspace_members')
+        .insert({
+          workspace_id: invitation.workspace_id,
+          user_id: user.id,
+          role: invitation.role,
+        } as never)
 
-    if (memberError) {
-      console.error('Failed to add team member:', memberError)
-      return NextResponse.json({ error: 'Failed to join workspace' }, { status: 500 })
+      if (memberError) {
+        // Check if already a member
+        if (memberError.code === '23505') {
+          // Already a member, just mark invitation as accepted
+        } else {
+          console.error('Failed to add workspace member:', memberError)
+          return NextResponse.json({ error: 'Failed to join workspace' }, { status: 500 })
+        }
+      }
+    } else {
+      // Legacy: Add user to team_members for backwards compatibility
+      const { error: memberError } = await supabase
+        .from('team_members')
+        .insert({
+          user_id: user.id,
+          email: user.email?.toLowerCase(),
+          workspace_owner_id: invitation.inviter_id,
+          role: invitation.role,
+          invited_by: invitation.inviter_id,
+          joined_at: new Date().toISOString(),
+        } as never)
+
+      if (memberError) {
+        console.error('Failed to add team member:', memberError)
+        return NextResponse.json({ error: 'Failed to join workspace' }, { status: 500 })
+      }
     }
 
     // Update invitation status
