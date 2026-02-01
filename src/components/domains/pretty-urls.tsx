@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Trash, Link as LinkIcon, Check, Pencil, Star, Copy } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -60,13 +60,9 @@ export function PrettyUrls({ domain, forms }: PrettyUrlsProps) {
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id || null)
     })
-  }, [])
+  }, [supabase.auth])
 
-  useEffect(() => {
-    loadUrls()
-  }, [domain.id])
-
-  const loadUrls = async () => {
+  const loadUrls = useCallback(async () => {
     setIsLoading(true)
     const { data } = await supabase
       .from('domain_urls')
@@ -76,7 +72,11 @@ export function PrettyUrls({ domain, forms }: PrettyUrlsProps) {
     
     setUrls((data as DomainUrl[]) || [])
     setIsLoading(false)
-  }
+  }, [domain.id, supabase])
+
+  useEffect(() => {
+    loadUrls()
+  }, [loadUrls])
 
   const handleSave = async () => {
     if (!selectedForm || !slug) {

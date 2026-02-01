@@ -3,7 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Layout,
   ChartBar,
@@ -67,6 +67,7 @@ const navItems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, setUser } = useAuth()
   const { workspaces, activeWorkspace, setWorkspaces, setActiveWorkspace, isLoading, refreshTrigger } = useWorkspace()
   const { isMobile } = useSidebar()
@@ -74,6 +75,19 @@ export function AppSidebar() {
   const [settingsOpen, setSettingsOpen] = React.useState(false)
   const [settingsTab, setSettingsTab] = React.useState('workspace')
   const supabase = createClient()
+
+  // Handle settings query param to open settings modal with specific tab
+  React.useEffect(() => {
+    const settingsParam = searchParams.get('settings')
+    if (settingsParam) {
+      setSettingsTab(settingsParam)
+      setSettingsOpen(true)
+      // Clean up URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('settings')
+      router.replace(url.pathname, { scroll: false })
+    }
+  }, [searchParams, router])
 
   // Fetch workspaces on mount and when refresh is triggered
   React.useEffect(() => {

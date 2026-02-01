@@ -2,13 +2,14 @@
 
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useWorkspace } from '@/store/workspace'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, ArrowClockwise, Globe, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon } from '@phosphor-icons/react'
+import { GearSix, UserCircle, BellSimple, Camera, Folder, Users, CreditCard, Crown, Check, Trash, Plus, Copy, Code, Eye, EyeSlash, Globe, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -838,7 +839,7 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                                         className="relative w-14 h-14 rounded-lg bg-muted flex items-center justify-center text-2xl cursor-pointer hover:bg-muted/80 transition-colors group overflow-hidden"
                                     >
                                         {workspaceIcon?.startsWith('http') ? (
-                                            <img src={workspaceIcon} alt="Workspace icon" className="w-full h-full object-cover" />
+                                            <Image src={workspaceIcon} alt="Workspace icon" fill className="object-cover" sizes="56px" />
                                         ) : (
                                             <Folder className="w-6 h-6 text-muted-foreground" weight="duotone" />
                                         )}
@@ -1181,9 +1182,9 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
                                             {members.map((member) => (
                                                 <div key={member.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        <div className="relative w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                                                             {member.avatar ? (
-                                                                <img src={member.avatar} alt={member.name || member.email} className="w-full h-full rounded-full object-cover" />
+                                                                <Image src={member.avatar} alt={member.name || member.email} fill className="rounded-full object-cover" sizes="32px" />
                                                             ) : (
                                                                 <span className="text-[12px] font-medium text-primary">
                                                                     {(member.name || member.email).charAt(0).toUpperCase()}

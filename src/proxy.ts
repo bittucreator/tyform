@@ -49,10 +49,10 @@ async function handleCustomDomain(request: NextRequest, host: string): Promise<N
     
     // Find the verified domain
     const { data: domain } = await supabase
-      .from('domains')
-      .select('id, domain, verified, favicon, meta_title, meta_description, meta_image')
+      .from('workspace_domains')
+      .select('id, domain, status')
       .eq('domain', cleanHost)
-      .eq('verified', true)
+      .eq('status', 'verified')
       .single()
     
     if (!domain) {
@@ -95,7 +95,7 @@ async function handleCustomDomain(request: NextRequest, host: string): Promise<N
         // Rewrite to the form page
         const url = request.nextUrl.clone()
         url.pathname = `/f/${defaultUrl.form_id}`
-        url.host = process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '').replace('http://', '') || 'tyform.com'
+        url.host = process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '').replace('http://', '') || 'localhost:3000'
         return NextResponse.rewrite(url)
       }
       
@@ -105,13 +105,12 @@ async function handleCustomDomain(request: NextRequest, host: string): Promise<N
         <!DOCTYPE html>
         <html>
           <head>
-            <title>${domain.meta_title || cleanHost}</title>
-            ${domain.favicon ? `<link rel="icon" href="${domain.favicon}">` : ''}
+            <title>${cleanHost}</title>
           </head>
           <body style="font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0;">
             <div style="text-align: center;">
-              <h1>${domain.meta_title || cleanHost}</h1>
-              <p>${domain.meta_description || 'Welcome'}</p>
+              <h1>${cleanHost}</h1>
+              <p>Welcome</p>
             </div>
           </body>
         </html>
@@ -125,7 +124,7 @@ async function handleCustomDomain(request: NextRequest, host: string): Promise<N
     
     const { data: domainUrl } = await supabase
       .from('domain_urls')
-      .select('form_id, meta_title, meta_description, meta_image')
+      .select('form_id')
       .eq('domain_id', domain.id)
       .eq('slug', slug)
       .single()
@@ -134,7 +133,7 @@ async function handleCustomDomain(request: NextRequest, host: string): Promise<N
       // Rewrite to the form page
       const url = request.nextUrl.clone()
       url.pathname = `/f/${domainUrl.form_id}`
-      url.host = process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '').replace('http://', '') || 'tyform.com'
+      url.host = process.env.NEXT_PUBLIC_APP_URL?.replace('https://', '').replace('http://', '') || 'localhost:3000'
       return NextResponse.rewrite(url)
     }
     

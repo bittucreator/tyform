@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { useFormBuilder } from '@/store/form-builder'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,13 +33,16 @@ import {
   Globe,
   Copy,
   CheckCircle,
-  Warning,
   ArrowSquareOut,
   Spinner,
   Image as ImageIcon,
+  Gear,
+  Link as LinkIcon,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import type { Domain, DomainUrl } from '@/types/database'
 
 interface SettingsPanelProps {
   open: boolean
@@ -78,6 +82,114 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const [emailTab, setEmailTab] = useState<'me' | 'responder'>('me')
   const [isUploadingSocialPreview, setIsUploadingSocialPreview] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
+  
+  // Domain state
+  const [verifiedDomains, setVerifiedDomains] = useState<Domain[]>([])
+  const [formDomainUrls, setFormDomainUrls] = useState<DomainUrl[]>([])
+  const [isLoadingDomains, setIsLoadingDomains] = useState(false)
+  const [selectedDomain, setSelectedDomain] = useState('')
+  const [domainSlug, setDomainSlug] = useState('')
+  const [isSavingDomainUrl, setIsSavingDomainUrl] = useState(false)
+  const supabase = createClient()
+
+  const loadDomainData = useCallback(async () => {
+    setIsLoadingDomains(true)
+    try {
+      // Load verified domains
+      const { data: domains } = await supabase
+        .from('workspace_domains')
+        .select('*')
+        .eq('status', 'verified')
+        .order('domain')
+      
+      setVerifiedDomains((domains as Domain[]) || [])
+
+      // Load domain URLs for this form
+      const { data: urls } = await supabase
+        .from('domain_urls')
+        .select('*')
+        .eq('form_id', form.id)
+      
+      setFormDomainUrls((urls as DomainUrl[]) || [])
+    } catch (error) {
+      console.error('Failed to load domain data:', error)
+    } finally {
+      setIsLoadingDomains(false)
+    }
+  }, [form.id, supabase])
+
+  // Load verified domains and form's domain URLs
+  useEffect(() => {
+    if (open && activeTab === 'domain') {
+      loadDomainData()
+    }
+  }, [open, activeTab, loadDomainData])
+
+  const handleSaveDomainUrl = async () => {
+    if (!selectedDomain || !domainSlug) {
+      toast.error('Please select a domain and enter a slug')
+      return
+    }
+
+    const slugPattern = /^[a-z0-9-]+$/
+    if (!slugPattern.test(domainSlug)) {
+      toast.error('Slug can only contain lowercase letters, numbers, and hyphens')
+      return
+    }
+
+    setIsSavingDomainUrl(true)
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      
+      const { error } = await supabase
+        .from('domain_urls')
+        .insert({
+          domain_id: selectedDomain,
+          form_id: form.id,
+          slug: domainSlug,
+          is_default: false,
+          user_id: user.user?.id
+        })
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error('This slug is already in use on this domain')
+        } else {
+          throw error
+        }
+        return
+      }
+
+      toast.success('Domain URL created')
+      setSelectedDomain('')
+      setDomainSlug('')
+      await loadDomainData()
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to save domain URL')
+    } finally {
+      setIsSavingDomainUrl(false)
+    }
+  }
+
+  const handleDeleteDomainUrl = async (urlId: string) => {
+    const { error } = await supabase
+      .from('domain_urls')
+      .delete()
+      .eq('id', urlId)
+
+    if (error) {
+      toast.error('Failed to delete URL')
+    } else {
+      setFormDomainUrls(formDomainUrls.filter(u => u.id !== urlId))
+      toast.success('URL deleted')
+    }
+  }
+
+  const getDomainName = (domainId: string) => {
+    const domain = verifiedDomains.find(d => d.id === domainId)
+    return domain?.domain || 'Unknown'
+  }
 
   // Local state for settings
   const settings = form.settings
@@ -719,10 +831,12 @@ Tyform"
               {settings.seo?.image ? (
                 <div className="space-y-2">
                   <div className="relative w-full h-32 rounded-lg border overflow-hidden">
-                    <img 
+                    <Image 
                       src={settings.seo.image} 
                       alt="Social preview" 
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="400px"
                     />
                     <Button
                       variant="destructive"
@@ -809,11 +923,15 @@ Tyform"
               </div>
               {settings.seo?.favicon ? (
                 <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <img 
-                    src={settings.seo.favicon} 
-                    alt="Favicon" 
-                    className="w-8 h-8 object-contain"
-                  />
+                  <div className="relative w-8 h-8">
+                    <Image 
+                      src={settings.seo.favicon} 
+                      alt="Favicon" 
+                      fill
+                      className="object-contain"
+                      sizes="32px"
+                    />
+                  </div>
                   <span className="text-sm text-muted-foreground flex-1 truncate">
                     {settings.seo.favicon.split('/').pop()}
                   </span>
@@ -905,7 +1023,7 @@ Tyform"
               <div>
                 <h2 className="text-lg font-semibold">Custom Domain</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Connect your own domain to serve forms on your brand.
+                  Serve this form on your own domain with a custom URL.
                 </p>
               </div>
               <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
@@ -918,7 +1036,7 @@ Tyform"
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Globe className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">Default Domain</span>
+                  <span className="font-medium">Default URL</span>
                 </div>
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                   <CheckCircle className="h-3 w-3 mr-1" weight="fill" />
@@ -945,99 +1063,126 @@ Tyform"
 
             <Separator />
 
-            {/* Connect Custom Domain */}
+            {/* Custom Domain URLs */}
             <div className="space-y-4">
-              <h3 className="font-medium">Connect Custom Domain</h3>
-              <p className="text-sm text-muted-foreground">
-                Use your own domain like <code className="bg-muted px-1.5 py-0.5 rounded text-xs">forms.yourdomain.com</code> to serve this form.
-              </p>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>Your Domain</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="forms.yourdomain.com"
-                      value={settings.customDomain || ''}
-                      onChange={(e) => handleUpdateSetting('customDomain', e.target.value)}
-                    />
-                    <Button>
-                      Connect
-                    </Button>
-                  </div>
-                </div>
-
-                {/* DNS Instructions */}
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-4 space-y-3">
-                  <div className="flex gap-2">
-                    <Warning className="h-5 w-5 text-amber-600 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200">DNS Configuration Required</p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                        Add the following CNAME record to your domain&apos;s DNS settings:
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-white dark:bg-background rounded border p-3 space-y-2">
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <p className="text-muted-foreground font-medium">Type</p>
-                        <p className="font-mono">CNAME</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground font-medium">Name</p>
-                        <p className="font-mono">forms</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground font-medium">Value</p>
-                        <p className="font-mono">cname.tyform.app</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Custom Domain URLs</h3>
+                {isLoadingDomains && <Spinner className="h-4 w-4 animate-spin" />}
               </div>
+
+              {verifiedDomains.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center">
+                  <Globe className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground mb-2">No verified domains yet</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Add and verify a custom domain in workspace settings first
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.location.href = '/dashboard?settings=domains'}
+                  >
+                    <Gear className="h-3.5 w-3.5 mr-1.5" />
+                    Manage Domains
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Add new URL */}
+                  <div className="rounded-lg border p-4 space-y-3">
+                    <p className="text-sm font-medium">Add Custom URL</p>
+                    <div className="flex gap-2">
+                      <Select value={selectedDomain} onValueChange={setSelectedDomain}>
+                        <SelectTrigger className="w-45">
+                          <SelectValue placeholder="Select domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {verifiedDomains.map(domain => (
+                            <SelectItem key={domain.id} value={domain.id}>
+                              {domain.domain}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1 flex-1">
+                        <span className="text-sm text-muted-foreground">/</span>
+                        <Input
+                          placeholder="contact"
+                          value={domainSlug}
+                          onChange={(e) => setDomainSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                          className="flex-1"
+                        />
+                      </div>
+                      <Button onClick={handleSaveDomainUrl} disabled={isSavingDomainUrl}>
+                        {isSavingDomainUrl ? <Spinner className="h-4 w-4 animate-spin" /> : 'Add'}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Example: {selectedDomain ? getDomainName(selectedDomain) : 'yourdomain.com'}/{domainSlug || 'contact'}
+                    </p>
+                  </div>
+
+                  {/* Existing URLs for this form */}
+                  {formDomainUrls.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Active URLs for this form</p>
+                      <div className="rounded-lg border divide-y">
+                        {formDomainUrls.map(url => (
+                          <div key={url.id} className="flex items-center justify-between p-3">
+                            <div className="flex items-center gap-2">
+                              <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                              <code className="text-sm">{getDomainName(url.domain_id)}/{url.slug}</code>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`https://${getDomainName(url.domain_id)}/${url.slug}`)
+                                  toast.success('URL copied')
+                                }}
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => window.open(`https://${getDomainName(url.domain_id)}/${url.slug}`, '_blank')}
+                              >
+                                <ArrowSquareOut className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteDomainUrl(url.id)}
+                              >
+                                <Trash className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <Separator />
 
-            {/* Connected Domains List */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Connected Domains</h3>
-              
-              {!settings.customDomain ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Globe className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No custom domains connected yet</p>
-                </div>
-              ) : (
-                <div className="rounded-lg border divide-y">
-                  <div className="flex items-center justify-between p-3">
-                    <div className="flex items-center gap-3">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-mono">{settings.customDomain}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                        Pending Verification
-                      </Badge>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <ArrowSquareOut className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-destructive"
-                        onClick={() => {
-                          handleUpdateSetting('customDomain', null)
-                          toast.success('Domain removed')
-                        }}
-                      >
-                        <Trash className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
+            {/* Link to domain management */}
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+              <div>
+                <p className="text-sm font-medium">Need to add more domains?</p>
+                <p className="text-xs text-muted-foreground">Manage all your domains from workspace settings</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => window.location.href = '/dashboard?settings=domains'}>
+                <Gear className="h-3.5 w-3.5 mr-1.5" />
+                Manage Domains
+              </Button>
             </div>
           </div>
         )
