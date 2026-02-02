@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -22,14 +22,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { 
-  Check, 
   Info,
-  ArrowSquareOut,
   Warning,
   CircleNotch,
   SignOut,
 } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
 
 type IntegrationType = 'google-sheets' | 'notion' | 'slack' | 'discord'
 
@@ -80,8 +77,6 @@ interface IntegrationModalProps {
 }
 
 // All integrations use OAuth
-const OAUTH_INTEGRATIONS = ['google-sheets', 'notion', 'slack', 'discord'] as const
-
 const INTEGRATION_INFO: Record<IntegrationType, { 
   title: string
   description: string
@@ -149,24 +144,27 @@ export function IntegrationModal({
   const [enabled, setEnabled] = useState(existingIntegration?.enabled ?? true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
 
-  // Check OAuth status when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchOAuthStatus()
+  const fetchResources = useCallback(async () => {
+    setIsLoadingResources(true)
+    try {
+      const response = await fetch('/api/integrations/oauth/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: integrationType }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setResources(data.resources || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch resources:', err)
+    } finally {
+      setIsLoadingResources(false)
     }
-  }, [open, integrationType])
+  }, [integrationType])
 
-  // Check for OAuth callback in URL
-  useEffect(() => {
-    const connected = searchParams.get('connected')
-    if (connected === integrationType) {
-      fetchOAuthStatus()
-    }
-  }, [searchParams, integrationType])
-
-  const fetchOAuthStatus = async () => {
+  const fetchOAuthStatus = useCallback(async () => {
     setIsLoadingOAuth(true)
     try {
       const response = await fetch('/api/integrations/oauth/status')
@@ -185,26 +183,22 @@ export function IntegrationModal({
     } finally {
       setIsLoadingOAuth(false)
     }
-  }
+  }, [integrationType, fetchResources])
 
-  const fetchResources = async () => {
-    setIsLoadingResources(true)
-    try {
-      const response = await fetch('/api/integrations/oauth/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider: integrationType }),
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setResources(data.resources || [])
-      }
-    } catch (err) {
-      console.error('Failed to fetch resources:', err)
-    } finally {
-      setIsLoadingResources(false)
+  // Check OAuth status when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchOAuthStatus()
     }
-  }
+  }, [open, fetchOAuthStatus])
+
+  // Check for OAuth callback in URL
+  useEffect(() => {
+    const connected = searchParams.get('connected')
+    if (connected === integrationType) {
+      fetchOAuthStatus()
+    }
+  }, [searchParams, integrationType, fetchOAuthStatus])
 
   const handleConnect = () => {
     // Redirect to OAuth flow
@@ -234,34 +228,6 @@ export function IntegrationModal({
       return false
     }
     return true
-  }
-
-  const handleTestConnection = async () => {
-    if (!validateForm()) return
-
-    setTestStatus('testing')
-    try {
-      const response = await fetch('/api/integrations/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: integrationType,
-          config: { resourceId: selectedResource },
-        }),
-      })
-
-      if (response.ok) {
-        setTestStatus('success')
-        setTimeout(() => setTestStatus('idle'), 3000)
-      } else {
-        setTestStatus('error')
-        const data = await response.json()
-        setError(data.error || 'Connection test failed')
-      }
-    } catch {
-      setTestStatus('error')
-      setError('Failed to test connection')
-    }
   }
 
   const handleSave = async () => {
@@ -294,7 +260,6 @@ export function IntegrationModal({
   const handleClose = () => {
     if (!isSaving) {
       setError('')
-      setTestStatus('idle')
       onOpenChange(false)
     }
   }

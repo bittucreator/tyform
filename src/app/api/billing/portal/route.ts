@@ -40,11 +40,15 @@ export async function POST(request: Request) {
       .eq('workspace_id', workspaceId)
       .single() as { data: { dodo_customer_id: string | null; plan: string; status: string } | null; error: unknown }
 
+    console.log('Portal - Subscription query:', { workspaceId, subscription, subError })
+
     if (subError || !subscription) {
+      console.log('Portal - No subscription found for workspace:', workspaceId)
       return NextResponse.json({ error: 'No subscription found for this workspace' }, { status: 404 })
     }
 
     if (!subscription.dodo_customer_id) {
+      console.log('Portal - No dodo_customer_id for workspace:', workspaceId)
       // No customer yet - they haven't completed a purchase
       return NextResponse.json({ 
         error: 'No billing information found. Please subscribe to a plan first.',
@@ -53,15 +57,15 @@ export async function POST(request: Request) {
     }
 
     // Create customer portal session with Dodo Payments
-    const portalResponse = await fetch(`${getDodoBaseUrl()}/customer_portal/session`, {
+    // Docs: https://docs.dodopayments.com/api-reference/customer-portal
+    const portalResponse = await fetch(`${getDodoBaseUrl()}/customers/${subscription.dodo_customer_id}/customer-portal/session`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        customer_id: subscription.dodo_customer_id,
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/dashboard`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/billing`,
       }),
     })
 
@@ -80,10 +84,11 @@ export async function POST(request: Request) {
       workspaceId, 
       userId: user.id,
       customerId: subscription.dodo_customer_id,
+      portalUrl: portalData.link,
     })
     
     return NextResponse.json({ 
-      url: portalData.url || portalData.portal_url,
+      url: portalData.link,
     })
   } catch (error) {
     console.error('Error in POST /api/billing/portal:', error)
@@ -117,16 +122,15 @@ export async function GET(request: Request) {
     }
 
     // Create customer portal session
-    const portalResponse = await fetch(`${getDodoBaseUrl()}/customer_portal/session`, {
+    const portalResponse = await fetch(`${getDodoBaseUrl()}/customers/${customerId}/customer-portal/session`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        customer_id: customerId,
         send_email: sendEmail === 'true',
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/dashboard`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/billing`,
       }),
     })
 
@@ -136,7 +140,7 @@ export async function GET(request: Request) {
 
     const portalData = await portalResponse.json()
     
-    return NextResponse.redirect(portalData.url || portalData.portal_url)
+    return NextResponse.redirect(portalData.link)
   } catch (error) {
     console.error('Error in GET /api/billing/portal:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -19,6 +19,14 @@ function getProductId(plan: string, billingCycle: string): string | null {
       return process.env.DODO_PRODUCT_PRO_YEARLY || null
     }
   }
+  if (plan === 'business') {
+    if (billingCycle === 'monthly') {
+      return process.env.DODO_PRODUCT_BUSINESS_MONTHLY || null
+    }
+    if (billingCycle === 'yearly') {
+      return process.env.DODO_PRODUCT_BUSINESS_YEARLY || null
+    }
+  }
   return null
 }
 
@@ -34,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const { plan, billingCycle, workspaceId } = await request.json()
 
-    if (!plan || plan !== 'pro') {
+    if (!plan || !['pro', 'business'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
@@ -77,7 +85,7 @@ export async function POST(request: NextRequest) {
       .single() as { data: { name: string; slug: string } | null }
 
     // Build the return URL
-    const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/dashboard/${workspace?.slug || workspaceId}/settings?checkout=success`
+    const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://tyform.com'}/billing?checkout=success`
 
     // Create checkout session with Dodo Payments API
     // Docs: https://docs.dodopayments.com/api-reference/checkout-sessions/create
