@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { triggerWebhooks } from '@/lib/webhooks'
 import { sendFormNotifications } from '@/lib/form-notifications'
 import type { Form, Response as FormResponse, Json } from '@/types/database'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    // Use admin client to bypass RLS - form submissions are from anonymous users
+    const supabase = createAdminClient()
     const body = await request.json()
     
     const { formId, answers, metadata } = body as {

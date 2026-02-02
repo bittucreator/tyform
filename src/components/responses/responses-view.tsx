@@ -27,11 +27,12 @@ interface ResponsesViewProps {
   responses: Response[]
   completedCount: number
   partialCount: number
+  isPro?: boolean
 }
 
 const ITEMS_PER_PAGE = 20
 
-export function ResponsesView({ form, responses, completedCount, partialCount }: ResponsesViewProps) {
+export function ResponsesView({ form, responses, completedCount, partialCount, isPro = false }: ResponsesViewProps) {
   const [filter, setFilter] = useState<'all' | 'completed' | 'partial'>('all')
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -58,43 +59,14 @@ export function ResponsesView({ form, responses, completedCount, partialCount }:
     (q) => q.type !== 'welcome' && q.type !== 'thank_you'
   )
 
-  // Build a map of question ID to question
-  const questionMap = useMemo(() => {
-    const map = new Map<string, Question>()
-    form.questions.forEach(q => map.set(q.id, q))
-    return map
-  }, [form.questions])
-
-  // Get all unique answer keys from responses
-  const allAnswerKeys = useMemo(() => {
-    const keys = new Set<string>()
-    responses.forEach(r => {
-      Object.keys(r.answers || {}).forEach(k => keys.add(k))
-    })
-    return Array.from(keys)
-  }, [responses])
-
-  // Determine columns
-  const hasMatchingIds = displayQuestions.some(q => allAnswerKeys.includes(q.id))
-  
+  // Determine columns - always use displayQuestions as the base
   const columns = useMemo(() => {
-    if (hasMatchingIds) {
-      return displayQuestions.map(q => ({
-        id: q.id,
-        title: q.title,
-        type: q.type
-      }))
-    } else {
-      return allAnswerKeys.map(key => {
-        const question = questionMap.get(key)
-        return {
-          id: key,
-          title: question?.title || `Question`,
-          type: question?.type || 'unknown'
-        }
-      })
-    }
-  }, [hasMatchingIds, displayQuestions, allAnswerKeys, questionMap])
+    return displayQuestions.map(q => ({
+      id: q.id,
+      title: q.title,
+      type: q.type
+    }))
+  }, [displayQuestions])
 
   const getColumnIcon = (type: string) => {
     switch (type) {
@@ -193,17 +165,19 @@ export function ResponsesView({ form, responses, completedCount, partialCount }:
           >
             Completed <span className="ml-1 text-muted-foreground">{completedCount}</span>
           </button>
-          <button
-            onClick={() => { setFilter('partial'); setCurrentPage(1) }}
-            className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-              filter === 'partial' 
-                ? "bg-muted text-foreground" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            Partial <span className="ml-1 text-muted-foreground">{partialCount}</span>
-          </button>
+          {isPro && (
+            <button
+              onClick={() => { setFilter('partial'); setCurrentPage(1) }}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                filter === 'partial' 
+                  ? "bg-muted text-foreground" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              Partial <span className="ml-1 text-muted-foreground">{partialCount}</span>
+            </button>
+          )}
         </div>
 
         <Button 

@@ -1,6 +1,6 @@
 // Plan configuration - similar to Tally's pricing structure
 
-export type PlanType = 'free' | 'pro' | 'business'
+export type PlanType = 'free' | 'pro'
 
 export interface PlanLimits {
   // Form limits
@@ -188,66 +188,6 @@ export const PLANS: Record<PlanType, PlanInfo> = {
       dedicatedManager: false,
     },
   },
-  business: {
-    name: 'Business',
-    description: 'For organizations with advanced needs',
-    monthlyPrice: 50,
-    yearlyPrice: 500, // 2 months free
-    limits: {
-      // Form limits
-      maxForms: 'unlimited',
-      maxResponsesPerMonth: 'unlimited',
-      maxFileUploadSize: 500, // 500 MB per file
-      maxTotalStorage: 100, // 100 GB total
-      
-      // Features
-      removeBranding: true,
-      customDomains: true,
-      customCSS: true,
-      partialSubmissions: true,
-      workspaces: true,
-      collaboration: true,
-      maxTeamMembers: 'unlimited',
-      
-      // Analytics
-      basicAnalytics: true,
-      advancedAnalytics: true,
-      dropOffAnalytics: true,
-      
-      // Integrations
-      webhooks: true,
-      apiAccess: true,
-      googleSheets: true,
-      notion: true,
-      slack: true,
-      discord: true,
-      premiumIntegrations: true,
-      
-      // Email
-      selfEmailNotifications: true,
-      responderEmailNotifications: true,
-      customEmailDomain: true,
-      
-      // Customization
-      customThankYouPage: true,
-      customOgImage: true,
-      customFavicon: true,
-      
-      // Access control
-      passwordProtection: true,
-      closeForms: true,
-      preventDuplicates: true,
-      
-      // Business features
-      dataRetentionControl: true,
-      emailVerification: true,
-      versionHistoryDays: 90,
-      ssoSaml: true,
-      auditLogs: true,
-      prioritySupport: true,
-      dedicatedManager: true,
-    },
-  },
 }
 
 // Feature display groups for billing page
@@ -297,18 +237,6 @@ export const FEATURE_GROUPS = {
       'Priority support',
     ],
   },
-  business: {
-    title: 'Everything in Pro, plus:',
-    features: [
-      'Control data retention',
-      'Email verification',
-      'Version history (90 days)',
-      'SSO / SAML',
-      'Audit logs',
-      'Dedicated account manager',
-      'Custom contracts',
-    ],
-  },
 }
 
 // Helper to get plan limits
@@ -336,8 +264,7 @@ export function hasFeature(plan: PlanType, feature: keyof PlanLimits): boolean {
 // Helper to get the minimum required plan for a feature
 export function getRequiredPlan(feature: keyof PlanLimits): PlanType {
   if (hasFeature('free', feature)) return 'free'
-  if (hasFeature('pro', feature)) return 'pro'
-  return 'business'
+  return 'pro'
 }
 
 // Feature descriptions for upgrade prompts
@@ -381,21 +308,5 @@ export const FEATURE_UPGRADE_MESSAGES: Partial<Record<keyof PlanLimits, { title:
   premiumIntegrations: {
     title: 'Premium integrations',
     description: 'Connect Google Analytics and Meta Pixel for conversion tracking.',
-  },
-  dataRetentionControl: {
-    title: 'Data retention control',
-    description: 'Automatically delete submissions after a set period for privacy compliance.',
-  },
-  emailVerification: {
-    title: 'Email verification',
-    description: 'Verify respondent emails to capture high-quality leads.',
-  },
-  ssoSaml: {
-    title: 'SSO / SAML',
-    description: 'Enterprise single sign-on for your organization.',
-  },
-  auditLogs: {
-    title: 'Audit logs',
-    description: 'Track all changes and actions in your workspace.',
   },
 }

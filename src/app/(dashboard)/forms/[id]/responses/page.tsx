@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormTabsLayout } from '@/components/responses/form-tabs-layout'
 import { ResponsesView } from '@/components/responses/responses-view'
+import { getWorkspacePlanAccess } from '@/lib/plan-access'
 import type { Form, Response } from '@/types/database'
 
 interface ResponsesPageProps {
@@ -28,6 +29,13 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
 
   const form = formData as Form
 
+  // Get plan access to check for Pro features
+  let isPro = false
+  if (form.workspace_id) {
+    const planAccess = await getWorkspacePlanAccess(form.workspace_id)
+    isPro = planAccess.canUse('partialSubmissions')
+  }
+
   const { data: responsesData } = await supabase
     .from('responses')
     .select('*')
@@ -46,6 +54,7 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
         responses={responses}
         completedCount={completedCount}
         partialCount={partialCount}
+        isPro={isPro}
       />
     </FormTabsLayout>
   )

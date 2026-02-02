@@ -114,7 +114,7 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
     const [removingMember, setRemovingMember] = useState<string | null>(null)
     
     // Billing state
-    const [currentPlan, setCurrentPlan] = useState<'free' | 'pro' | 'business'>('free')
+    const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free')
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
     const [loadingBilling, setLoadingBilling] = useState(false)
     
@@ -509,14 +509,14 @@ export function SettingsModal({ open, onOpenChange, user, workspace: initialWork
         toast.success('Invite link copied to clipboard')
     }
 
-    const handleUpgradePlan = async (plan: 'pro' | 'business') => {
+    const handleUpgradePlan = async () => {
         setLoadingBilling(true)
         try {
             const response = await fetch('/api/billing/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    plan, 
+                    plan: 'pro', 
                     billingCycle,
                     workspaceId: workspace?.id 
                 }),

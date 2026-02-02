@@ -19,14 +19,6 @@ function getProductId(plan: string, billingCycle: string): string | null {
       return process.env.DODO_PRODUCT_PRO_YEARLY || null
     }
   }
-  if (plan === 'business') {
-    if (billingCycle === 'monthly') {
-      return process.env.DODO_PRODUCT_BUSINESS_MONTHLY || null
-    }
-    if (billingCycle === 'yearly') {
-      return process.env.DODO_PRODUCT_BUSINESS_YEARLY || null
-    }
-  }
   return null
 }
 
@@ -42,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     const { plan, billingCycle, workspaceId } = await request.json()
 
-    if (!plan || !['pro', 'business'].includes(plan)) {
+    if (!plan || plan !== 'pro') {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 

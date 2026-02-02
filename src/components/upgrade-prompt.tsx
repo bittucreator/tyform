@@ -173,27 +173,24 @@ export function FeatureGate({
 }
 
 interface ProBadgeProps {
-  plan?: PlanType
   className?: string
 }
 
 /**
  * Small badge to indicate a feature requires a paid plan
  */
-export function ProBadge({ plan = 'pro', className }: ProBadgeProps) {
+export function ProBadge({ className }: ProBadgeProps) {
   const router = useRouter()
   
   return (
     <Badge 
       className={cn(
-        "cursor-pointer text-xs",
-        plan === 'pro' && "bg-pink-100 text-pink-600 hover:bg-pink-200",
-        plan === 'business' && "bg-blue-100 text-blue-600 hover:bg-blue-200",
+        "cursor-pointer text-xs bg-pink-100 text-pink-600 hover:bg-pink-200",
         className
       )}
       onClick={() => router.push('/billing')}
     >
-      {plan === 'pro' ? 'Pro' : 'Business'}
+      Pro
     </Badge>
   )
 }

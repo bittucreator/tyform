@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { Check, Crown, Lightning, Sparkle, Buildings } from '@phosphor-icons/react'
+import { Check, Crown, Lightning, Sparkle } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { PLANS, FEATURE_GROUPS, type PlanType } from '@/lib/plans'
@@ -114,6 +114,41 @@ export default function BillingPage() {
     }
   }
 
+  const handleDowngrade = async () => {
+    if (!workspaceId) return
+
+    const confirmed = window.confirm(
+      'Are you sure you want to downgrade to the Free plan? You will lose access to Pro features at the end of your billing period.'
+    )
+    if (!confirmed) return
+
+    setLoading('free')
+    try {
+      const response = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspaceId }),
+      })
+
+      const data = await response.json()
+      if (response.ok) {
+        toast.success('Your subscription will be cancelled at the end of the billing period')
+        // Refresh subscription data
+        const subRes = await fetch(`/api/billing/subscription?workspaceId=${workspaceId}`)
+        if (subRes.ok) {
+          const subData = await subRes.json()
+          setSubscription(subData.subscription)
+        }
+      } else {
+        toast.error(data.error || 'Failed to cancel subscription')
+      }
+    } catch {
+      toast.error('Something went wrong')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const currentPlan = (subscription?.plan as PlanType) || 'free'
   const isSubscribed = subscription?.status === 'active' || subscription?.status === 'trialing'
 
@@ -126,9 +161,9 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-10">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-6">
       {/* Upgrade Section */}
-      <div className="space-y-6">
+      <div className="max-w-3xl w-full space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">Do more with Tyform</h1>
           <p className="text-muted-foreground">
@@ -155,51 +190,74 @@ export default function BillingPage() {
             )} onClick={() => setBillingCycle('yearly')}>
               Pay yearly
             </span>
-            <Badge className={cn(
-              "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 transition-opacity",
-              billingCycle === 'yearly' ? 'opacity-100' : 'opacity-0'
-            )}>
-              2 months off
-            </Badge>
+            {billingCycle === 'yearly' && (
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                2 months off
+              </Badge>
+            )}
           </div>
         </div>
 
-        {/* Current Plan Banner */}
-        {isSubscribed && currentPlan !== 'free' && (
-          <div className="border rounded-xl p-4 bg-linear-to-br from-primary/5 to-primary/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  {currentPlan === 'business' ? (
-                    <Buildings className="w-5 h-5 text-primary" weight="fill" />
-                  ) : (
-                    <Crown className="w-5 h-5 text-primary" weight="fill" />
-                  )}
+        {/* Plan Cards */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Free Plan */}
+          <div className={cn(
+            "relative border rounded-xl overflow-hidden",
+            currentPlan === 'free' && !isSubscribed && "ring-2 ring-primary ring-offset-2"
+          )}>
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                  <Check className="w-6 h-6 text-muted-foreground" weight="bold" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold">Tyform {PLANS[currentPlan].name}</h3>
-                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      {subscription?.status === 'trialing' ? 'Trial' : 'Active'}
-                    </Badge>
+                  <h3 className="text-xl font-bold">Free</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold">$0</span>
+                    <span className="text-sm text-muted-foreground">forever</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {subscription?.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly'} billing
-                    {subscription?.current_period_end && (
-                      <> • Renews {new Date(subscription.current_period_end).toLocaleDateString()}</>
-                    )}
-                  </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleManageBilling} disabled={loading !== null}>
-                Manage Billing
-              </Button>
+
+              <p className="text-sm text-muted-foreground mb-4">
+                {FEATURE_GROUPS.free.title}
+              </p>
+
+              <div className="space-y-2 mb-6">
+                {FEATURE_GROUPS.free.features.slice(0, 8).map((feature) => (
+                  <div key={feature} className="flex items-center gap-2 text-sm">
+                    <Check className="w-4 h-4 text-green-500 shrink-0" weight="bold" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+                {FEATURE_GROUPS.free.features.length > 8 && (
+                  <p className="text-xs text-muted-foreground pl-6">
+                    +{FEATURE_GROUPS.free.features.length - 8} more features
+                  </p>
+                )}
+              </div>
+
+              {currentPlan === 'free' ? (
+                <Button variant="outline" className="w-full" disabled>
+                  Current Plan
+                </Button>
+              ) : isSubscribed ? (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleDowngrade}
+                  disabled={loading !== null}
+                >
+                  {loading === 'free' ? 'Loading...' : 'Downgrade to Free'}
+                </Button>
+              ) : (
+                <Button variant="outline" className="w-full" disabled>
+                  Free forever
+                </Button>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Plan Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Pro Plan */}
           <div className={cn(
             "relative border-2 rounded-xl overflow-hidden",
@@ -266,67 +324,44 @@ export default function BillingPage() {
                   ) : (
                     <>
                       <Lightning className="w-4 h-4 mr-1.5" weight="fill" />
-                      Get started
+                      Upgrade to Pro
                     </>
                   )}
                 </Button>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Business Plan */}
-          <div className={cn(
-            "relative border rounded-xl overflow-hidden",
-            currentPlan === 'business' && isSubscribed && "ring-2 ring-primary ring-offset-2"
-          )}>
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Buildings className="w-6 h-6 text-blue-600" weight="fill" />
+        {/* Current Plan Banner */}
+        {isSubscribed && currentPlan !== 'free' && (
+          <div className="border rounded-xl p-4 bg-linear-to-br from-primary/5 to-primary/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-primary" weight="fill" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Business</h3>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold">
-                      ${billingCycle === 'monthly' ? PLANS.business.monthlyPrice : PLANS.business.yearlyPrice}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {billingCycle === 'monthly' ? 'per month' : 'per year'}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold">Tyform {PLANS[currentPlan].name}</h3>
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      {subscription?.status === 'trialing' ? 'Trial' : 'Active'}
+                    </Badge>
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    {subscription?.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly'} billing
+                    {subscription?.current_period_end && (
+                      <> • Renews {new Date(subscription.current_period_end).toLocaleDateString()}</>
+                    )}
+                  </p>
                 </div>
               </div>
-
-              <p className="text-sm text-muted-foreground mb-4">
-                {FEATURE_GROUPS.business.title}
-              </p>
-
-              <div className="space-y-2 mb-6">
-                {FEATURE_GROUPS.business.features.map((feature) => (
-                  <div key={feature} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-green-500 shrink-0" weight="bold" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              {currentPlan === 'business' && isSubscribed ? (
-                <Button variant="outline" className="w-full" disabled>
-                  Current Plan
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleSubscribe('business')}
-                  disabled={loading !== null}
-                >
-                  {loading === 'business' ? 'Loading...' : 'Get started'}
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={handleManageBilling} disabled={loading !== null}>
+                Manage Billing
+              </Button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

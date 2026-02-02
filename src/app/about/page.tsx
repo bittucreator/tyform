@@ -18,7 +18,7 @@ export default function AboutPage() {
 
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link>
-              <Link href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
+              <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
               <Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link>
             </nav>
 
@@ -126,7 +126,9 @@ export default function AboutPage() {
                 <h4 className="font-semibold text-foreground mb-4">Features</h4>
                 <ul className="space-y-2">
                   <li><Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Overview</Link></li>
-                  <li><Link href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+                  <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link></li>
+                  <li><Link href="/compare" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Compare</Link></li>
+                  <li><Link href="/#integrations" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Integrations</Link></li>
                   <li><Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
                 </ul>
               </div>

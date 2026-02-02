@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Link as LinkIcon, PencilSimple, DotsThree } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Form } from '@/types/database'
 
 interface FormTabsLayoutProps {
@@ -27,6 +28,7 @@ export function FormTabsLayout({ form, children }: FormTabsLayoutProps) {
   const copyLink = async () => {
     const formUrl = `${window.location.origin}/f/${form.short_id || form.id}`
     await navigator.clipboard.writeText(formUrl)
+    toast.success('Form link copied to clipboard')
   }
 
   return (
