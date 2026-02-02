@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Code, Plus, Copy, Trash, Eye, EyeSlash } from '@phosphor-icons/react'
+import { Code, Plus, Copy, Trash, Eye, EyeSlash, Lock, Crown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
+import { useProFeature } from '@/components/pro-feature-gate'
 
 interface ApiKey {
   id: string
@@ -15,6 +17,8 @@ interface ApiKey {
 }
 
 export default function ApiPage() {
+  const router = useRouter()
+  const { shouldDisable: noApiAccess, isLoading: planLoading } = useProFeature('apiAccess')
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [loadingApiKeys, setLoadingApiKeys] = useState(true)
@@ -100,10 +104,37 @@ export default function ApiPage() {
     }
   }
 
-  if (loadingApiKeys) {
+  if (loadingApiKeys || planLoading) {
     return (
       <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  // Gate API access for free users
+  if (noApiAccess) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">API</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage API keys for programmatic access
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Crown className="w-10 h-10 text-primary" weight="fill" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">API Access is a Pro Feature</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Upgrade to Pro to access the Tyform API and programmatically manage your forms, responses, and more.
+          </p>
+          <Button size="lg" onClick={() => router.push('/billing')}>
+            Upgrade to Pro
+          </Button>
+        </div>
       </div>
     )
   }

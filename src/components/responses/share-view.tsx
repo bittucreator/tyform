@@ -1,15 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
   Copy, 
   Check,
   Star,
-  Code
+  Code,
+  Lock
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { useProFeature } from '@/components/pro-feature-gate'
 import type { Form } from '@/types/database'
 
 interface ShareViewProps {
@@ -20,9 +23,11 @@ interface ShareViewProps {
 type EmbedType = 'standard' | 'popup' | 'fullpage'
 
 export function ShareView({ form, formUrl }: ShareViewProps) {
+  const router = useRouter()
   const [copied, setCopied] = useState(false)
   const [selectedEmbed, setSelectedEmbed] = useState<EmbedType>('standard')
   const [embedCopied, setEmbedCopied] = useState(false)
+  const { shouldDisable: noCustomOgImage } = useProFeature('customOgImage')
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formUrl)
@@ -109,8 +114,22 @@ export function ShareView({ form, formUrl }: ShareViewProps) {
           <h2 className="text-lg font-semibold mb-2">Link Preview</h2>
           <p className="text-muted-foreground text-sm mb-6">
             When you share a link, it will embed with a preview similar to the one below on social media, messaging apps, and search engines.{' '}
-            <span className="text-primary cursor-pointer hover:underline">Customize</span>{' '}
-            <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">Pro</span>
+            <span 
+              className={cn(
+                "cursor-pointer hover:underline",
+                noCustomOgImage ? "text-muted-foreground" : "text-primary"
+              )}
+              onClick={() => router.push(noCustomOgImage ? '/billing' : `/forms/${form.id}/settings?tab=link`)}
+            >
+              Customize
+            </span>{' '}
+            <span className={cn(
+              "text-xs px-1.5 py-0.5 rounded inline-flex items-center gap-1",
+              noCustomOgImage ? "bg-pink-100 text-pink-600" : "bg-primary/10 text-primary"
+            )}>
+              {noCustomOgImage && <Lock className="w-3 h-3" weight="bold" />}
+              Pro
+            </span>
           </p>
 
           <div className="border border-border rounded-lg p-4 bg-card">

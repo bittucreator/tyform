@@ -174,14 +174,76 @@ ${env.app.url}
     formId,
     answers,
     submittedAt,
+    customBody,
   }: {
     formTitle: string
     formId: string
     answers: Array<{ question: string; answer: string }>
     submittedAt: string
+    customBody?: string
   }) => ({
     subject: `New submission for ${formTitle}`,
-    html: `
+    html: customBody 
+      ? `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Form Submission</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #635BFF 0%, #8B5CF6 100%); padding: 32px 24px; text-align: center;">
+              <h1 style="margin: 0; color: white; font-size: 24px; font-weight: 600;">
+                New Form Submission
+              </h1>
+              <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
+                ${escapeHtml(formTitle)}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Custom Content -->
+          <tr>
+            <td style="padding: 24px;">
+              <p style="margin: 0 0 16px; color: #666; font-size: 14px;">
+                Submitted on ${submittedAt}
+              </p>
+              <div style="white-space: pre-wrap; color: #333; font-size: 14px; line-height: 1.6;">
+                ${escapeHtml(customBody)}
+              </div>
+              
+              <div style="margin-top: 24px; text-align: center;">
+                <a href="${env.app.url}/forms/${formId}/responses" 
+                   style="display: inline-block; padding: 12px 24px; background: #635BFF; color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">
+                  View All Responses
+                </a>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 16px 24px; background: #f9fafb; text-align: center; border-top: 1px solid #eee;">
+              <p style="margin: 0; color: #999; font-size: 12px;">
+                Sent by <a href="${env.app.url}" style="color: #635BFF; text-decoration: none;">Tyform</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+      `.trim()
+      : `
 <!DOCTYPE html>
 <html>
 <head>
@@ -250,7 +312,9 @@ ${env.app.url}
 </body>
 </html>
     `.trim(),
-    text: `New submission for ${formTitle}\n\nSubmitted on ${submittedAt}\n\n${answers.map(a => `${a.question}: ${a.answer}`).join('\n')}\n\nView responses: ${env.app.url}/forms/${formId}/responses`,
+    text: customBody 
+      ? `New submission for ${formTitle}\n\nSubmitted on ${submittedAt}\n\n${customBody}\n\nView responses: ${env.app.url}/forms/${formId}/responses`
+      : `New submission for ${formTitle}\n\nSubmitted on ${submittedAt}\n\n${answers.map(a => `${a.question}: ${a.answer}`).join('\n')}\n\nView responses: ${env.app.url}/forms/${formId}/responses`,
   }),
 
   // Confirmation email for respondent

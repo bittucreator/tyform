@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useFormBuilder } from '@/store/form-builder'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,10 +39,13 @@ import {
   Image as ImageIcon,
   Gear,
   Link as LinkIcon,
+  Lock,
+  Crown,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { useProFeature } from '@/components/pro-feature-gate'
 import type { Domain, DomainUrl } from '@/types/database'
 
 interface SettingsPanelProps {
@@ -77,11 +81,21 @@ const languages = [
 ]
 
 export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
-  const { form, updateSettings } = useFormBuilder()
+  const router = useRouter()
+  const { form, updateSettings, isDirty } = useFormBuilder()
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
   const [emailTab, setEmailTab] = useState<'me' | 'responder'>('me')
   const [isUploadingSocialPreview, setIsUploadingSocialPreview] = useState(false)
   const [isUploadingFavicon, setIsUploadingFavicon] = useState(false)
+  
+  // Pro feature checks
+  const { shouldDisable: noCustomDomains } = useProFeature('customDomains')
+  const { shouldDisable: noCustomOgImage } = useProFeature('customOgImage')
+  const { shouldDisable: noCustomFavicon } = useProFeature('customFavicon')
+  const { shouldDisable: noRemoveBranding } = useProFeature('removeBranding')
+  const { shouldDisable: noResponderEmail } = useProFeature('responderEmailNotifications')
+  const { shouldDisable: noCustomCSS } = useProFeature('customCSS')
+  const { shouldDisable: noPartialSubmissions } = useProFeature('partialSubmissions')
   
   // Domain state
   const [verifiedDomains, setVerifiedDomains] = useState<Domain[]>([])
@@ -93,12 +107,20 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
   const supabase = createClient()
 
   const loadDomainData = useCallback(async () => {
+    if (!form.workspace_id) {
+      // No workspace_id means we can't load domains
+      setVerifiedDomains([])
+      setIsLoadingDomains(false)
+      return
+    }
+    
     setIsLoadingDomains(true)
     try {
-      // Load verified domains
+      // Load verified domains for THIS workspace only
       const { data: domains } = await supabase
         .from('workspace_domains')
         .select('*')
+        .eq('workspace_id', form.workspace_id)
         .eq('status', 'verified')
         .order('domain')
       
@@ -116,7 +138,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
     } finally {
       setIsLoadingDomains(false)
     }
-  }, [form.id, supabase])
+  }, [form.id, form.workspace_id, supabase])
 
   // Load verified domains and form's domain URLs
   useEffect(() => {
@@ -280,11 +302,18 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             </div>
 
             {/* Refill Link */}
-            <div className="flex items-center justify-between py-4 border-b">
+            <div className={cn("flex items-center justify-between py-4 border-b", noPartialSubmissions && "opacity-60")}>
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-medium">Refill Link</p>
-                  <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
+                  <Badge 
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1 cursor-pointer",
+                      noPartialSubmissions ? "bg-pink-100 text-pink-600" : "bg-primary text-primary-foreground"
+                    )}
+                    onClick={noPartialSubmissions ? () => router.push('/billing') : undefined}
+                  >
+                    {noPartialSubmissions && <Lock className="w-3 h-3" weight="bold" />}
                     PRO
                   </Badge>
                 </div>
@@ -296,6 +325,7 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
               <Switch
                 checked={settings.enableRefillLink ?? false}
                 onCheckedChange={(checked) => handleUpdateSetting('enableRefillLink', checked)}
+                disabled={noPartialSubmissions}
               />
             </div>
 
@@ -315,17 +345,73 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
             </div>
 
             {/* Show Powered By */}
-            <div className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-2">
-                <p className="font-medium">Show &quot;Powered By Tyform&quot;</p>
-                <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
-                  PRO
-                </Badge>
+            <div className={cn("flex items-center justify-between py-4", noRemoveBranding && "opacity-60")}>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">Show &quot;Powered By Tyform&quot;</p>
+                  <Badge 
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1 cursor-pointer",
+                      noRemoveBranding ? "bg-pink-100 text-pink-600" : "bg-primary text-primary-foreground"
+                    )}
+                    onClick={noRemoveBranding ? () => router.push('/billing') : undefined}
+                  >
+                    {noRemoveBranding && <Lock className="w-3 h-3" weight="bold" />}
+                    PRO
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Upgrade to Pro to remove Tyform branding from your forms.
+                </p>
               </div>
               <Switch
                 checked={settings.showPoweredBy ?? true}
                 onCheckedChange={(checked) => handleUpdateSetting('showPoweredBy', checked)}
+                disabled={noRemoveBranding}
               />
+            </div>
+
+            {/* Custom CSS */}
+            <div className="space-y-3 py-4 border-t">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">Custom CSS</p>
+                  <Badge 
+                    className={cn(
+                      "text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1 cursor-pointer",
+                      noCustomCSS ? "bg-pink-100 text-pink-600" : "bg-primary text-primary-foreground"
+                    )}
+                    onClick={noCustomCSS ? () => router.push('/billing') : undefined}
+                  >
+                    {noCustomCSS && <Lock className="w-3 h-3" weight="bold" />}
+                    PRO
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Add custom CSS to style your form beyond the built-in theme options.
+                </p>
+              </div>
+              {noCustomCSS ? (
+                <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                    <Crown className="w-6 h-6 text-primary" weight="fill" />
+                  </div>
+                  <h4 className="font-semibold mb-1">Unlock Custom CSS</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Apply custom styles to make your forms truly unique.
+                  </p>
+                  <Button size="sm" onClick={() => router.push('/billing')}>
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              ) : (
+                <Textarea
+                  placeholder={`/* Add your custom CSS here */\n.form-container {\n  /* Your styles */\n}`}
+                  value={settings.customCSS || ''}
+                  onChange={(e) => handleUpdateSetting('customCSS', e.target.value)}
+                  className="font-mono text-sm min-h-37.5"
+                />
+              )}
             </div>
           </div>
         )
@@ -364,13 +450,8 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
                 {/* To Email */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label>To</Label>
-                    <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
-                      PRO
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
+                  <Label>To</Label>
+                  <div className="relative">
                     <Input
                       placeholder="your@email.com"
                       value={settings.emailNotifications?.to || ''}
@@ -380,18 +461,31 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
                           to: e.target.value,
                         })
                       }
-                      className="flex-1"
+                      className="pr-20"
                     />
-                    <Button variant="outline" size="sm">Configure</Button>
+                    {settings.emailNotifications?.to && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-green-600">
+                        <CheckCircle className="w-3.5 h-3.5" weight="fill" />
+                        <span>Saved</span>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Receiver&apos;s email address. You can add multiple recipients in PRO plan.
+                    Receiver&apos;s email address for notifications. Changes auto-save.
                   </p>
                 </div>
 
                 {/* Reply To */}
                 <div className="space-y-2">
-                  <Label>Reply To</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Reply To</Label>
+                    {settings.emailNotifications?.replyTo && (
+                      <span className="flex items-center gap-1 text-xs text-green-600">
+                        <CheckCircle className="w-3.5 h-3.5" weight="fill" />
+                        Saved
+                      </span>
+                    )}
+                  </div>
                   <Select
                     value={settings.emailNotifications?.replyTo || ''}
                     onValueChange={(value) =>
@@ -422,9 +516,17 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
                 {/* Email Subject */}
                 <div className="space-y-2">
-                  <Label>Email Subject</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Email Subject</Label>
+                    {settings.emailNotifications?.subject && (
+                      <span className="flex items-center gap-1 text-xs text-green-600">
+                        <CheckCircle className="w-3.5 h-3.5" weight="fill" />
+                        Saved
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Customize the subject of the notification email. TextT @ to include questions and variables.
+                    Customize the subject of the notification email. Use @ to include questions and variables.
                   </p>
                   <Input
                     placeholder={`🎉 You received a new submission in ${form.title}`}
@@ -440,14 +542,17 @@ export function SettingsPanel({ open, onClose }: SettingsPanelProps) {
 
                 {/* Email Body */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between">
                     <Label>Email Body</Label>
-                    <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
-                      PRO
-                    </Badge>
+                    {settings.emailNotifications?.body && (
+                      <span className="flex items-center gap-1 text-xs text-green-600">
+                        <CheckCircle className="w-3.5 h-3.5" weight="fill" />
+                        Saved
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Customize the body of the notification email using the editor below.
+                    Customize the body of the notification email. Use @Form Name and @All Answers as placeholders.
                   </p>
                   <Textarea
                     rows={6}
@@ -472,82 +577,100 @@ Tyform"
               </div>
             ) : (
               <div className="space-y-6">
-                {/* PaperPlaneTilt Confirmation to Responder */}
-                <div className="flex items-center justify-between py-4 border-b">
-                  <div>
-                    <p className="font-medium">PaperPlaneTilt Confirmation Email</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      PaperPlaneTilt an automatic confirmation email to the respondent after submission.
+                {/* Gate responder email for free users */}
+                {noResponderEmail ? (
+                  <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <Crown className="w-8 h-8 text-primary" weight="fill" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Respondent Emails</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                      Send automatic confirmation emails to respondents after they submit your form. Upgrade to Pro to unlock.
                     </p>
+                    <Button onClick={() => router.push('/billing')}>
+                      Upgrade to Pro
+                    </Button>
                   </div>
-                  <Switch
-                    checked={settings.responderEmail?.enabled ?? false}
-                    onCheckedChange={(checked) =>
-                      handleUpdateSetting('responderEmail', {
-                        ...settings.responderEmail,
-                        enabled: checked,
-                      })
-                    }
-                  />
-                </div>
+                ) : (
+                  <>
+                    {/* PaperPlaneTilt Confirmation to Responder */}
+                    <div className="flex items-center justify-between py-4 border-b">
+                      <div>
+                        <p className="font-medium">PaperPlaneTilt Confirmation Email</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          PaperPlaneTilt an automatic confirmation email to the respondent after submission.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={settings.responderEmail?.enabled ?? false}
+                        onCheckedChange={(checked) =>
+                          handleUpdateSetting('responderEmail', {
+                            ...settings.responderEmail,
+                            enabled: checked,
+                          })
+                        }
+                      />
+                    </div>
 
-                {/* Responder Email Field */}
-                <div className="space-y-2">
-                  <Label>Respondent Email Field</Label>
-                  <Select
-                    value={settings.responderEmail?.emailField || ''}
-                    onValueChange={(value) =>
-                      handleUpdateSetting('responderEmail', {
-                        ...settings.responderEmail,
-                        emailField: value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="-- Select an email block from the form --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {form.questions
-                        .filter((q) => q.type === 'email')
-                        .map((q) => (
-                          <SelectItem key={q.id} value={q.id}>
-                            {q.title}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    {/* Responder Email Field */}
+                    <div className="space-y-2">
+                      <Label>Respondent Email Field</Label>
+                      <Select
+                        value={settings.responderEmail?.emailField || ''}
+                        onValueChange={(value) =>
+                          handleUpdateSetting('responderEmail', {
+                            ...settings.responderEmail,
+                            emailField: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="-- Select an email block from the form --" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {form.questions
+                            .filter((q) => q.type === 'email')
+                            .map((q) => (
+                              <SelectItem key={q.id} value={q.id}>
+                                {q.title}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Confirmation Subject */}
-                <div className="space-y-2">
-                  <Label>Confirmation Subject</Label>
-                  <Input
-                    placeholder="Thank you for your submission!"
-                    value={settings.responderEmail?.subject || ''}
-                    onChange={(e) =>
-                      handleUpdateSetting('responderEmail', {
-                        ...settings.responderEmail,
-                        subject: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+                    {/* Confirmation Subject */}
+                    <div className="space-y-2">
+                      <Label>Confirmation Subject</Label>
+                      <Input
+                        placeholder="Thank you for your submission!"
+                        value={settings.responderEmail?.subject || ''}
+                        onChange={(e) =>
+                          handleUpdateSetting('responderEmail', {
+                            ...settings.responderEmail,
+                            subject: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
 
-                {/* Confirmation Body */}
-                <div className="space-y-2">
-                  <Label>Confirmation Message</Label>
-                  <Textarea
-                    rows={6}
-                    placeholder="Thank you for submitting the form. We have received your response and will get back to you soon."
-                    value={settings.responderEmail?.body || ''}
-                    onChange={(e) =>
-                      handleUpdateSetting('responderEmail', {
-                        ...settings.responderEmail,
-                        body: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+                    {/* Confirmation Body */}
+                    <div className="space-y-2">
+                      <Label>Confirmation Message</Label>
+                      <Textarea
+                        rows={6}
+                        placeholder="Thank you for submitting the form. We have received your response and will get back to you soon."
+                        value={settings.responderEmail?.body || ''}
+                        onChange={(e) =>
+                          handleUpdateSetting('responderEmail', {
+                            ...settings.responderEmail,
+                            body: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -821,14 +944,29 @@ Tyform"
             </div>
 
             {/* Social Preview Image */}
-            <div className="space-y-2">
+            <div className={cn("space-y-2", noCustomOgImage && "opacity-60")}>
               <div className="flex items-center gap-2">
                 <Label>Social Preview Image</Label>
-                <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
+                <Badge 
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1 cursor-pointer",
+                    noCustomOgImage ? "bg-pink-100 text-pink-600" : "bg-primary text-primary-foreground"
+                  )}
+                  onClick={noCustomOgImage ? () => router.push('/billing') : undefined}
+                >
+                  {noCustomOgImage && <Lock className="w-3 h-3" weight="bold" />}
                   PRO
                 </Badge>
               </div>
-              {settings.seo?.image ? (
+              {noCustomOgImage ? (
+                <div 
+                  className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 cursor-pointer"
+                  onClick={() => router.push('/billing')}
+                >
+                  <Crown className="w-6 h-6 text-primary mb-1" weight="fill" />
+                  <p className="text-xs text-primary font-medium">Upgrade to Pro</p>
+                </div>
+              ) : settings.seo?.image ? (
                 <div className="space-y-2">
                   <div className="relative w-full h-32 rounded-lg border overflow-hidden">
                     <Image 
@@ -914,14 +1052,29 @@ Tyform"
             </div>
 
             {/* Favicon */}
-            <div className="space-y-2">
+            <div className={cn("space-y-2", noCustomFavicon && "opacity-60")}>
               <div className="flex items-center gap-2">
                 <Label>Favicon</Label>
-                <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0">
+                <Badge 
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1 cursor-pointer",
+                    noCustomFavicon ? "bg-pink-100 text-pink-600" : "bg-primary text-primary-foreground"
+                  )}
+                  onClick={noCustomFavicon ? () => router.push('/billing') : undefined}
+                >
+                  {noCustomFavicon && <Lock className="w-3 h-3" weight="bold" />}
                   PRO
                 </Badge>
               </div>
-              {settings.seo?.favicon ? (
+              {noCustomFavicon ? (
+                <div 
+                  className="flex items-center gap-3 w-full p-3 border-2 border-dashed border-primary/30 rounded-lg bg-primary/5 cursor-pointer"
+                  onClick={() => router.push('/billing')}
+                >
+                  <Crown className="w-5 h-5 text-primary" weight="fill" />
+                  <span className="text-sm text-primary font-medium">Upgrade to Pro to add custom favicon</span>
+                </div>
+              ) : settings.seo?.favicon ? (
                 <div className="flex items-center gap-3 p-3 border rounded-lg">
                   <div className="relative w-8 h-8">
                     <Image 
@@ -1017,6 +1170,74 @@ Tyform"
         )
 
       case 'domain':
+        // Show upgrade prompt for free users
+        if (noCustomDomains) {
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">Custom Domain</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Serve this form on your own domain with a custom URL.
+                  </p>
+                </div>
+                <Badge className="bg-pink-100 text-pink-600 text-[10px] px-1.5 py-0.5 inline-flex items-center gap-1">
+                  <Lock className="w-3 h-3" weight="bold" />
+                  PRO
+                </Badge>
+              </div>
+
+              <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <Crown className="w-8 h-8 text-primary" weight="fill" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Upgrade to Pro</h3>
+                <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                  Custom domains are a Pro feature. Upgrade to serve your forms on your own branded domain.
+                </p>
+                <Button onClick={() => router.push('/billing')}>
+                  Upgrade to Pro
+                </Button>
+              </div>
+
+              {/* Still show the default URL */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-medium">Default URL</span>
+                  </div>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" weight="fill" />
+                    Active
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 bg-muted/50 rounded-md px-3 py-2">
+                  <code className="text-sm flex-1">
+                    {form.short_id 
+                      ? `https://tyform.com/r/${form.short_id}`
+                      : `https://tyform.com/f/${form.id}`}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => {
+                      const url = form.short_id 
+                        ? `https://tyform.com/r/${form.short_id}`
+                        : `https://tyform.com/f/${form.id}`
+                      navigator.clipboard.writeText(url)
+                      toast.success('URL copied to clipboard')
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -1289,7 +1510,15 @@ Tyform"
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-3xl p-0">
         <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>Form Settings</SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle>Form Settings</SheetTitle>
+            {isDirty && (
+              <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Unsaved changes - press Save or ⌘S
+              </div>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="flex h-[calc(100vh-80px)]">

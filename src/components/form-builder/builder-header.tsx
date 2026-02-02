@@ -17,7 +17,6 @@ import {
   ChartBar,
 } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 
 interface FormBuilderHeaderProps {
   onSave: () => Promise<void>
@@ -26,16 +25,12 @@ interface FormBuilderHeaderProps {
   isDirty: boolean
   showThemeEditor: boolean
   onToggleThemeEditor: () => void
-  showWebhookEditor: boolean
-  onToggleWebhookEditor: () => void
   showLogicPanel: boolean
   onToggleLogicPanel: () => void
   showSettingsPanel: boolean
   onToggleSettingsPanel: () => void
   showSharePanel: boolean
   onToggleSharePanel: () => void
-  showResultsPanel: boolean
-  onToggleResultsPanel: () => void
   onCloseAllPanels: () => void
 }
 
@@ -46,16 +41,12 @@ export function FormBuilderHeader({
   isDirty,
   showThemeEditor,
   onToggleThemeEditor,
-  showWebhookEditor,
-  onToggleWebhookEditor,
   showLogicPanel,
   onToggleLogicPanel,
   showSettingsPanel,
   onToggleSettingsPanel,
   showSharePanel,
   onToggleSharePanel,
-  showResultsPanel,
-  onToggleResultsPanel,
   onCloseAllPanels,
 }: FormBuilderHeaderProps) {
   const { form, setTitle } = useFormBuilder()
@@ -63,7 +54,7 @@ export function FormBuilderHeader({
   const [isPublishing, setIsPublishing] = useState(false)
 
   // Check if any panel is open
-  const isInBuildMode = !showThemeEditor && !showSettingsPanel && !showSharePanel && !showResultsPanel
+  const isInBuildMode = !showThemeEditor && !showSettingsPanel && !showSharePanel
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -120,24 +111,24 @@ export function FormBuilderHeader({
               Design
             </Button>
             <Button 
-              variant="ghost"
+              variant={showLogicPanel ? 'secondary' : 'ghost'}
               size="sm" 
-              className="text-sm text-muted-foreground hover:text-foreground cursor-not-allowed opacity-60"
-              disabled
+              className="text-sm text-muted-foreground hover:text-foreground"
+              onClick={onToggleLogicPanel}
             >
               <GitBranch className="h-4 w-4 mr-1" />
               Logic
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">Soon</Badge>
             </Button>
             <Button 
               variant="ghost"
               size="sm" 
-              className="text-sm text-muted-foreground hover:text-foreground cursor-not-allowed opacity-60"
-              disabled
+              className="text-sm text-muted-foreground hover:text-foreground"
+              asChild
             >
-              <Plug className="h-4 w-4 mr-1" />
-              Integrations
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">Soon</Badge>
+              <Link href={`/forms/${form?.id}/integrations`}>
+                <Plug className="h-4 w-4 mr-1" />
+                Integrations
+              </Link>
             </Button>
             <Button 
               variant={showSettingsPanel ? 'secondary' : 'ghost'}
@@ -158,13 +149,15 @@ export function FormBuilderHeader({
               Share
             </Button>
             <Button 
-              variant={showResultsPanel ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm" 
               className="text-sm text-muted-foreground hover:text-foreground"
-              onClick={onToggleResultsPanel}
+              asChild
             >
-              <ChartBar className="h-4 w-4 mr-1" />
-              Results
+              <Link href={`/forms/${form?.id}/responses`}>
+                <ChartBar className="h-4 w-4 mr-1" />
+                Results
+              </Link>
             </Button>
           </nav>
         </div>

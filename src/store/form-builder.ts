@@ -11,6 +11,7 @@ interface FormBuilderState {
     settings: FormSettings
     isPublished: boolean
     short_id?: string | null
+    workspace_id?: string | null
   }
   selectedQuestionId: string | null
   isDirty: boolean
@@ -237,6 +238,7 @@ export const useFormBuilder = create<FormBuilderState>((set, get) => ({
     questions: [],
     settings: defaultSettings,
     isPublished: false,
+    workspace_id: null,
   },
   selectedQuestionId: null,
   isDirty: false,
@@ -358,6 +360,7 @@ export const useFormBuilder = create<FormBuilderState>((set, get) => ({
         questions: [],
         settings: defaultSettings,
         isPublished: false,
+        workspace_id: null,
       },
       selectedQuestionId: null,
       isDirty: false,

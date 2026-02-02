@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -22,9 +23,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Globe, Plus, Copy, Trash, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon, LockSimple } from '@phosphor-icons/react'
+import { Globe, Plus, Copy, Trash, CheckCircle, XCircle, ArrowsClockwise, Link as LinkIcon, LockSimple, Crown } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { PrettyUrls } from '@/components/domains/pretty-urls'
+import { useProFeature } from '@/components/pro-feature-gate'
 import type { Domain, Form } from '@/types/database'
 
 interface DomainData {
@@ -37,6 +39,8 @@ interface DomainData {
 }
 
 export default function DomainsPage() {
+  const router = useRouter()
+  const { shouldDisable: noCustomDomains, isLoading: planLoading } = useProFeature('customDomains')
   const [workspaceId, setWorkspaceId] = useState<string | null>(null)
   const [domains, setDomains] = useState<DomainData[]>([])
   const [forms, setForms] = useState<Form[]>([])
@@ -153,10 +157,37 @@ export default function DomainsPage() {
     }
   }
 
-  if (loadingDomains) {
+  if (loadingDomains || planLoading) {
     return (
       <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  // Gate custom domains for free users
+  if (noCustomDomains) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Domains</h1>
+          <p className="text-muted-foreground mt-1">
+            Add custom domains to serve your forms on branded URLs
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-12 text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Crown className="w-10 h-10 text-primary" weight="fill" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Custom Domains is a Pro Feature</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Upgrade to Pro to serve your forms on your own branded domain like forms.yourdomain.com
+          </p>
+          <Button size="lg" onClick={() => router.push('/billing')}>
+            Upgrade to Pro
+          </Button>
+        </div>
       </div>
     )
   }

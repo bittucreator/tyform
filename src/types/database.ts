@@ -241,6 +241,9 @@ export interface FormSettings {
   
   // Auto-jump to next question
   autoJump?: boolean
+  
+  // Custom CSS (Pro feature)
+  customCSS?: string
 }
 
 export interface Database {

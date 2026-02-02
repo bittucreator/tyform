@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Table,
   TableBody,
@@ -17,7 +18,9 @@ import {
   CaretLeft, 
   CaretRight,
   DownloadSimple,
-  FileText
+  FileText,
+  Lock,
+  Crown
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { Form, Response, Question } from '@/types/database'
@@ -33,19 +36,28 @@ interface ResponsesViewProps {
 const ITEMS_PER_PAGE = 20
 
 export function ResponsesView({ form, responses, completedCount, partialCount, isPro = false }: ResponsesViewProps) {
+  const router = useRouter()
   const [filter, setFilter] = useState<'all' | 'completed' | 'partial'>('all')
   const [currentPage, setCurrentPage] = useState(1)
+
+  // For free users, only show completed responses
+  const availableResponses = useMemo(() => {
+    if (isPro) return responses
+    // Free users only see completed responses
+    return responses.filter(r => r.metadata?.isComplete !== false)
+  }, [responses, isPro])
 
   // Filter responses
   const filteredResponses = useMemo(() => {
     if (filter === 'completed') {
-      return responses.filter(r => r.metadata?.isComplete !== false)
+      return availableResponses.filter(r => r.metadata?.isComplete !== false)
     }
     if (filter === 'partial') {
-      return responses.filter(r => r.metadata?.isComplete === false)
+      // Only Pro users can view partial (this is gated in UI)
+      return availableResponses.filter(r => r.metadata?.isComplete === false)
     }
-    return responses
-  }, [responses, filter])
+    return availableResponses
+  }, [availableResponses, filter])
 
   // Pagination
   const totalPages = Math.ceil(filteredResponses.length / ITEMS_PER_PAGE)
@@ -152,7 +164,7 @@ export function ResponsesView({ form, responses, completedCount, partialCount, i
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            All <span className="ml-1 text-muted-foreground">{responses.length}</span>
+            All <span className="ml-1 text-muted-foreground">{availableResponses.length}</span>
           </button>
           <button
             onClick={() => { setFilter('completed'); setCurrentPage(1) }}
@@ -165,7 +177,7 @@ export function ResponsesView({ form, responses, completedCount, partialCount, i
           >
             Completed <span className="ml-1 text-muted-foreground">{completedCount}</span>
           </button>
-          {isPro && (
+          {isPro ? (
             <button
               onClick={() => { setFilter('partial'); setCurrentPage(1) }}
               className={cn(
@@ -177,7 +189,16 @@ export function ResponsesView({ form, responses, completedCount, partialCount, i
             >
               Partial <span className="ml-1 text-muted-foreground">{partialCount}</span>
             </button>
-          )}
+          ) : partialCount > 0 ? (
+            <button
+              onClick={() => router.push('/billing')}
+              className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50 flex items-center gap-1.5"
+            >
+              <Lock className="h-3.5 w-3.5" weight="bold" />
+              Partial <span className="ml-1 text-muted-foreground">{partialCount}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-100 text-pink-600 font-medium">PRO</span>
+            </button>
+          ) : null}
         </div>
 
         <Button 

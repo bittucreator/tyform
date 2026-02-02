@@ -2,6 +2,31 @@ import { sendEmail, emailTemplates } from './email'
 import type { Form, Response } from '@/types/database'
 
 /**
+ * Process custom email body with placeholders
+ * Supported placeholders:
+ * - @Form Name - replaced with form title
+ * - @All Answers - replaced with formatted answers
+ */
+function processCustomBody(
+  body: string, 
+  formTitle: string, 
+  formattedAnswers: Array<{ question: string; answer: string }>
+): string {
+  let processed = body
+  
+  // Replace @Form Name
+  processed = processed.replace(/@Form Name/gi, formTitle)
+  
+  // Replace @All Answers with formatted answers
+  const answersText = formattedAnswers
+    .map(a => `${a.question}: ${a.answer}`)
+    .join('\n')
+  processed = processed.replace(/@All Answers/gi, answersText)
+  
+  return processed
+}
+
+/**
  * Send email notifications for a form submission
  * - Owner notification if enabled
  * - Respondent confirmation if enabled
@@ -31,11 +56,17 @@ export async function sendFormNotifications(form: Form, response: Response): Pro
   
   // Send owner notification
   if (settings.emailNotifications?.enabled && settings.emailNotifications.to) {
+    // Check if custom body is configured
+    const customBody = settings.emailNotifications.body
+    
     const template = emailTemplates.formSubmissionNotification({
       formTitle: form.title,
       formId: form.id,
       answers: formattedAnswers,
       submittedAt,
+      customBody: customBody 
+        ? processCustomBody(customBody, form.title, formattedAnswers) 
+        : undefined,
     })
     
     const result = await sendEmail({

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useFormBuilder } from '@/store/form-builder'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -30,10 +31,13 @@ import {
   Calendar,
   CheckCircle,
   Question as QuestionIcon,
+  Lock,
+  Crown,
 } from '@phosphor-icons/react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { AdvancedAnalytics } from './advanced-analytics'
+import { useProFeature } from '@/components/pro-feature-gate'
 import type { Response, Question } from '@/types/database'
 
 interface ResultsPanelProps {
@@ -51,8 +55,12 @@ interface QuestionSummary {
 }
 
 export function ResultsPanel({ open, onClose }: ResultsPanelProps) {
+  const router = useRouter()
   const { form } = useFormBuilder()
   const supabase = createClient()
+  
+  // Pro feature checks
+  const { shouldDisable: noAdvancedAnalytics } = useProFeature('advancedAnalytics')
   
   const [activeTab, setActiveTab] = useState<ResultsTab>('submissions')
   const [submissionFilter, setSubmissionFilter] = useState<SubmissionFilter>('completed')
@@ -413,7 +421,20 @@ export function ResultsPanel({ open, onClose }: ResultsPanelProps) {
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
               <div className="p-6">
-                {form.id ? (
+                {noAdvancedAnalytics ? (
+                  <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <Crown className="w-8 h-8 text-primary" weight="fill" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                      Get detailed insights into form performance, drop-off rates, and completion times. Upgrade to Pro to unlock.
+                    </p>
+                    <Button onClick={() => router.push('/billing')}>
+                      Upgrade to Pro
+                    </Button>
+                  </div>
+                ) : form.id ? (
                   <AdvancedAnalytics formId={form.id} refreshKey={analyticsRefreshKey} />
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">

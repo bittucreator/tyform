@@ -56,9 +56,12 @@ export function SharePanel({ open, onClose }: SharePanelProps) {
   const [embedHeight, setEmbedHeight] = useState('700')
   const [showConfigureDialog, setShowConfigureDialog] = useState(false)
 
+  // Use short_id if available, otherwise fall back to id
+  const formIdentifier = form.short_id || form.id
+
   const formUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/f/${form.id}`
-    : `/f/${form.id}`
+    ? `${window.location.origin}/f/${formIdentifier}`
+    : `/f/${formIdentifier}`
 
   const appDomain = typeof window !== 'undefined'
     ? window.location.origin
@@ -95,17 +98,17 @@ export function SharePanel({ open, onClose }: SharePanelProps) {
   const getEmbedCode = () => {
     switch (embedTextT) {
       case 'inline':
-        return `<div data-tyform-embed data-form='${form.id}' data-width='${embedWidth}' data-height='${embedHeight}'></div>`
+        return `<div data-tyform-embed data-form='${formIdentifier}' data-width='${embedWidth}' data-height='${embedHeight}'></div>`
       case 'popup':
-        return `<button data-tyform-popup data-form='${form.id}'>Open Form</button>`
+        return `<button data-tyform-popup data-form='${formIdentifier}'>Open Form</button>`
       case 'slider':
-        return `<div data-tyform-slider data-form='${form.id}' data-position='right'></div>`
+        return `<div data-tyform-slider data-form='${formIdentifier}' data-position='right'></div>`
       case 'popover':
-        return `<div data-tyform-popover data-form='${form.id}'></div>`
+        return `<div data-tyform-popover data-form='${formIdentifier}'></div>`
       case 'side-tab':
-        return `<div data-tyform-sidetab data-form='${form.id}' data-label='Feedback'></div>`
+        return `<div data-tyform-sidetab data-form='${formIdentifier}' data-label='Feedback'></div>`
       default:
-        return `<div data-tyform-embed data-form='${form.id}' data-width='${embedWidth}' data-height='${embedHeight}'></div>`
+        return `<div data-tyform-embed data-form='${formIdentifier}' data-width='${embedWidth}' data-height='${embedHeight}'></div>`
     }
   }
 
@@ -119,20 +122,20 @@ export function SharePanel({ open, onClose }: SharePanelProps) {
         return `import { TyformEmbed } from '@tyform/react'
 
 <TyformEmbed 
-  formId="${form.id}" 
+  formId="${formIdentifier}" 
   width="${embedWidth}" 
   height="${embedHeight}" 
 />`
       case 'popup':
         return `import { TyformPopup } from '@tyform/react'
 
-<TyformPopup formId="${form.id}">
+<TyformPopup formId="${formIdentifier}">
   <button>Open Form</button>
 </TyformPopup>`
       default:
         return `import { TyformEmbed } from '@tyform/react'
 
-<TyformEmbed formId="${form.id}" />`
+<TyformEmbed formId="${formIdentifier}" />`
     }
   }
 

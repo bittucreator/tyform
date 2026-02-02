@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Question, CheckCircle } from '@phosphor-icons/react'
+import { Question, CheckCircle, Lock } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { useProFeature } from '@/components/pro-feature-gate'
 import type { Form } from '@/types/database'
 
 interface SettingsViewProps {
@@ -27,29 +28,35 @@ interface SettingRowProps {
   badge?: 'Pro' | 'Business'
   children: React.ReactNode
   disabled?: boolean
+  locked?: boolean
+  onUpgrade?: () => void
 }
 
-function SettingRow({ title, description, badge, children, disabled }: SettingRowProps) {
+function SettingRow({ title, description, badge, children, disabled, locked, onUpgrade }: SettingRowProps) {
   return (
     <div className={cn(
       "flex items-start justify-between py-6 border-b border-border/50 last:border-0",
-      disabled && "opacity-60"
+      (disabled || locked) && "opacity-60"
     )}>
       <div className="flex-1 pr-8">
         <div className="flex items-center gap-2 mb-1">
           <h3 className="text-sm font-medium">{title}</h3>
           {badge && (
-            <span className={cn(
-              "text-xs px-1.5 py-0.5 rounded font-medium",
-              badge === 'Pro' ? "bg-pink-100 text-pink-600" : "bg-blue-100 text-blue-600"
-            )}>
+            <span 
+              className={cn(
+                "text-xs px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1 cursor-pointer",
+                badge === 'Pro' ? "bg-pink-100 text-pink-600" : "bg-blue-100 text-blue-600"
+              )}
+              onClick={locked ? onUpgrade : undefined}
+            >
+              {locked && <Lock className="w-3 h-3" weight="bold" />}
               {badge}
             </span>
           )}
         </div>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <div className="shrink-0">
+      <div className={cn("shrink-0", locked && "pointer-events-none")}>
         {children}
       </div>
     </div>
@@ -69,6 +76,11 @@ export function SettingsView({ form }: SettingsViewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  
+  // Pro feature checks
+  const { shouldDisable: noPartialSubmissions } = useProFeature('partialSubmissions')
+  const { shouldDisable: noBrandingRemoval } = useProFeature('removeBranding')
+  const { shouldDisable: noRespondentEmail } = useProFeature('responderEmailNotifications')
   
   // General settings
   const [language, setLanguage] = useState(form.settings.language || 'en')
@@ -96,6 +108,8 @@ export function SettingsView({ form }: SettingsViewProps) {
   
   // Behavior settings
   const [autoJump, setAutoJump] = useState(!!form.settings.autoJump)
+
+  const goToUpgrade = () => router.push('/billing')
   const [saveForLater, setSaveForLater] = useState(form.settings.enablePartialSubmissions || false)
 
   const handleChange = () => {
@@ -222,21 +236,27 @@ export function SettingsView({ form }: SettingsViewProps) {
           title="Partial submissions"
           description="Collect answers from people who filled in a part of your form, but didn't click the submit button. You can't export partial submissions with integrations, nor enable email notifications."
           badge="Pro"
+          locked={noPartialSubmissions}
+          onUpgrade={goToUpgrade}
         >
           <Switch 
             checked={partialSubmissions} 
             onCheckedChange={(v) => { setPartialSubmissions(v); handleChange(); }} 
+            disabled={noPartialSubmissions}
           />
         </SettingRow>
 
         <SettingRow
           title="Tyform branding"
-          description='Show "Made with Tyform" on your form.'
+          description='Show "Made with Tyform" on your form. Upgrade to Pro to remove branding.'
           badge="Pro"
+          locked={noBrandingRemoval}
+          onUpgrade={goToUpgrade}
         >
           <Switch 
             checked={showBranding} 
             onCheckedChange={(v) => { setShowBranding(v); handleChange(); }} 
+            disabled={noBrandingRemoval}
           />
         </SettingRow>
       </section>
@@ -303,10 +323,13 @@ export function SettingsView({ form }: SettingsViewProps) {
           title="Respondent email notifications"
           description="Send a customized text email to respondents after form submission."
           badge="Pro"
+          locked={noRespondentEmail}
+          onUpgrade={goToUpgrade}
         >
           <Switch 
             checked={respondentEmailEnabled} 
             onCheckedChange={(v) => { setRespondentEmailEnabled(v); handleChange(); }} 
+            disabled={noRespondentEmail}
           />
         </SettingRow>
       </section>

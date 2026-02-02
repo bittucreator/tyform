@@ -9,10 +9,8 @@ import { BlockList } from './block-list'
 import { FormPreview } from './form-preview'
 import { BlockEditor } from './block-editor'
 import { ThemeEditor } from './theme-editor'
-import { IntegrationsPanel } from './integrations-panel'
 import { SettingsPanel } from './settings-panel'
 import { SharePanel } from './share-panel'
-import { ResultsPanel } from './results-panel'
 import { LogicFlowPanel } from './logic-flow-panel'
 import { toast } from 'sonner'
 import type { Form } from '@/types/database'
@@ -26,11 +24,9 @@ export function FormBuilder({ form }: FormBuilderProps) {
   const supabase = createClient()
   const { setForm, form: currentForm, isDirty, setDirty } = useFormBuilder()
   const [showThemeEditor, setShowThemeEditor] = useState(false)
-  const [showWebhookEditor, setShowWebhookEditor] = useState(false)
   const [showLogicPanel, setShowLogicPanel] = useState(false)
   const [showSettingsPanel, setShowSettingsPanel] = useState(false)
   const [showSharePanel, setShowSharePanel] = useState(false)
-  const [showResultsPanel, setShowResultsPanel] = useState(false)
   const [isPublished, setIsPublished] = useState(form.is_published)
 
   useEffect(() => {
@@ -42,6 +38,7 @@ export function FormBuilder({ form }: FormBuilderProps) {
       settings: form.settings,
       is_published: form.is_published,
       short_id: form.short_id,
+      workspace_id: form.workspace_id,
     })
     setIsPublished(form.is_published)
   }, [form, setForm])
@@ -101,7 +98,6 @@ export function FormBuilder({ form }: FormBuilderProps) {
     setShowThemeEditor(false)
     setShowSettingsPanel(false)
     setShowSharePanel(false)
-    setShowResultsPanel(false)
   }, [])
 
   return (
@@ -113,16 +109,12 @@ export function FormBuilder({ form }: FormBuilderProps) {
         isDirty={isDirty}
         showThemeEditor={showThemeEditor}
         onToggleThemeEditor={() => setShowThemeEditor(!showThemeEditor)}
-        showWebhookEditor={showWebhookEditor}
-        onToggleWebhookEditor={() => setShowWebhookEditor(!showWebhookEditor)}
         showLogicPanel={showLogicPanel}
         onToggleLogicPanel={() => setShowLogicPanel(!showLogicPanel)}
         showSettingsPanel={showSettingsPanel}
         onToggleSettingsPanel={() => setShowSettingsPanel(!showSettingsPanel)}
         showSharePanel={showSharePanel}
         onToggleSharePanel={() => setShowSharePanel(!showSharePanel)}
-        showResultsPanel={showResultsPanel}
-        onToggleResultsPanel={() => setShowResultsPanel(!showResultsPanel)}
         onCloseAllPanels={handleCloseAllPanels}
       />
       <div className="flex-1 flex overflow-hidden">
@@ -140,12 +132,6 @@ export function FormBuilder({ form }: FormBuilderProps) {
         )}
       </div>
       
-      {/* Integrations Panel */}
-      <IntegrationsPanel 
-        open={showWebhookEditor} 
-        onClose={() => setShowWebhookEditor(false)} 
-      />
-      
       {/* Settings Panel */}
       <SettingsPanel
         open={showSettingsPanel}
@@ -156,12 +142,6 @@ export function FormBuilder({ form }: FormBuilderProps) {
       <SharePanel
         open={showSharePanel}
         onClose={() => setShowSharePanel(false)}
-      />
-      
-      {/* Results Panel */}
-      <ResultsPanel
-        open={showResultsPanel}
-        onClose={() => setShowResultsPanel(false)}
       />
       
       {/* Logic Flow Panel */}

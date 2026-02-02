@@ -381,8 +381,12 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     return (
       <>
         <GoogleFontLoader font={theme.fontFamily} />
+        {/* Custom CSS - injected for Pro users */}
+        {form.settings.customCSS && (
+          <style dangerouslySetInnerHTML={{ __html: form.settings.customCSS }} />
+        )}
         <div
-          className="min-h-screen flex items-center justify-center p-4"
+          className="min-h-screen flex items-center justify-center p-4 form-container"
           style={themeStyles}
         >
         <motion.div
@@ -449,8 +453,12 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     return (
       <>
         <GoogleFontLoader font={theme.fontFamily} />
+        {/* Custom CSS - injected for Pro users */}
+        {form.settings.customCSS && (
+          <style dangerouslySetInnerHTML={{ __html: form.settings.customCSS }} />
+        )}
         <div
-          className="min-h-screen flex flex-col items-center justify-center p-4"
+          className="min-h-screen flex flex-col items-center justify-center p-4 form-container"
           style={themeStyles}
         >
         {/* Cover Image - Landscape banner */}
@@ -592,8 +600,12 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     return (
       <>
         <GoogleFontLoader font={theme.fontFamily} />
+        {/* Custom CSS - injected for Pro users */}
+        {form.settings.customCSS && (
+          <style dangerouslySetInnerHTML={{ __html: form.settings.customCSS }} />
+        )}
         <div 
-          className="min-h-screen flex flex-col"
+          className="min-h-screen flex flex-col form-container"
           style={{ 
             backgroundColor: theme.backgroundColor,
             fontFamily: theme.fontFamily,
@@ -630,8 +642,12 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     return (
       <>
         <GoogleFontLoader font={theme.fontFamily} />
+        {/* Custom CSS - injected for Pro users */}
+        {form.settings.customCSS && (
+          <style dangerouslySetInnerHTML={{ __html: form.settings.customCSS }} />
+        )}
         <div 
-          className="min-h-screen flex"
+          className="min-h-screen flex form-container"
           style={{ 
             fontFamily: theme.fontFamily,
             color: theme.textColor,
@@ -671,8 +687,12 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
   return (
     <>
       <GoogleFontLoader font={theme.fontFamily} />
+      {/* Custom CSS - injected for Pro users */}
+      {form.settings.customCSS && (
+        <style dangerouslySetInnerHTML={{ __html: form.settings.customCSS }} />
+      )}
       <div 
-        className="min-h-screen flex flex-col"
+        className="min-h-screen flex flex-col form-container"
         style={themeStyles}
       >
       {/* Progress bar */}

@@ -299,29 +299,38 @@ export function LogicFlowPanel({ open, onClose }: LogicFlowPanelProps) {
   return (
     <>
       <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-        <SheetContent className="w-full sm:max-w-full p-0" side="bottom" style={{ height: '100vh' }}>
+        <SheetContent className="w-full sm:max-w-full p-0" side="bottom" style={{ height: '100vh' }} showCloseButton={false}>
           {/* Header */}
           <div className="h-14 border-b flex items-center justify-between px-4 bg-background">
-            <Tabs value={navMode} onValueChange={(v) => setNavMode(v as NavigationMode)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="mouse" className="text-xs px-3 h-6">Mouse</TabsTrigger>
-                <TabsTrigger value="trackpad" className="text-xs px-3 h-6">Trackpad</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+              <span className="font-medium">Logic Flow</span>
+            </div>
 
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleReset}>
-                <ArrowCounterClockwise className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleMagnifyingGlassPlus}>
-                <MagnifyingGlassPlus className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleMagnifyingGlassMinus}>
-                <MagnifyingGlassMinus className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleFitToScreen}>
-                <ArrowsOut className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center gap-4">
+              <Tabs value={navMode} onValueChange={(v) => setNavMode(v as NavigationMode)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="mouse" className="text-xs px-3 h-6">Mouse</TabsTrigger>
+                  <TabsTrigger value="trackpad" className="text-xs px-3 h-6">Trackpad</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleReset}>
+                  <ArrowCounterClockwise className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleMagnifyingGlassPlus}>
+                  <MagnifyingGlassPlus className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleMagnifyingGlassMinus}>
+                  <MagnifyingGlassMinus className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleFitToScreen}>
+                  <ArrowsOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -357,13 +366,14 @@ export function LogicFlowPanel({ open, onClose }: LogicFlowPanelProps) {
                         selectedQuestion?.id === question.id && 'ring-2 ring-primary ring-offset-2'
                       )}
                     >
-                      <span className="text-sm font-medium truncate block">
-                        {question.title 
-                          ? `${index + 1}. ${question.title.substring(0, 18)}${question.title.length > 18 ? '...' : ''}`
-                          : getShortLabel(question, index)
-                        }
-                        {' '}
-                        <span>{getQuestionIcon(question.type)}</span>
+                      <span className="text-sm font-medium truncate flex items-center gap-1.5">
+                        <span className="flex-shrink-0">{getQuestionIcon(question.type)}</span>
+                        <span className="truncate">
+                          {question.title 
+                            ? `${index + 1}. ${question.title.substring(0, 18)}${question.title.length > 18 ? '...' : ''}`
+                            : getShortLabel(question, index)
+                          }
+                        </span>
                       </span>
                     </button>
 
