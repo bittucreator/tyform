@@ -10,11 +10,20 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     const body = await request.json()
     
+    // Debug: log the raw body
+    console.log('=== FORM SUBMIT DEBUG ===')
+    console.log('Raw body:', JSON.stringify(body, null, 2))
+    
     const { formId, answers, metadata } = body as {
       formId: string
       answers: Record<string, Json>
       metadata?: Record<string, unknown>
     }
+    
+    console.log('Parsed formId:', formId)
+    console.log('Parsed answers:', JSON.stringify(answers, null, 2))
+    console.log('Answer keys:', Object.keys(answers || {}))
+    console.log('=========================')
     
     if (!formId) {
       return NextResponse.json({ error: 'Missing formId' }, { status: 400 })
@@ -73,6 +82,11 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single()
+    
+    console.log('=== INSERT RESULT ===')
+    console.log('Inserted response:', JSON.stringify(response, null, 2))
+    console.log('Insert error:', responseError)
+    console.log('=====================')
     
     if (responseError) {
       console.error('Response insert error:', responseError)

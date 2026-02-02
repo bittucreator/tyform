@@ -315,7 +315,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
   const handleNext = useCallback(() => {
     const nextIndex = getNextQuestionIndex(currentIndex, questions, answers)
     if (nextIndex < questions.length) {
-      setCurrentIndex(nextIndex)
+      const nextQuestion = questions[nextIndex]
+      // If the next question is thank_you, submit the form first, then show thank you
+      if (nextQuestion?.type === 'thank_you') {
+        handleSubmit()
+      } else {
+        setCurrentIndex(nextIndex)
+      }
     } else {
       handleSubmit()
     }
@@ -430,7 +436,8 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     )
   }
 
-  if (isSubmitted || (currentQuestion?.type === 'thank_you')) {
+  // Only show thank you screen if form was actually submitted
+  if (isSubmitted) {
     const thankYouQuestion = questions.find((q) => q.type === 'thank_you')
     const thankYou = thankYouQuestion || {
       title: 'Thank you!',

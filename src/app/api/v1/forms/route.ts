@@ -51,17 +51,27 @@ export async function GET(request: Request) {
 
   const { data: forms, error } = await adminClient
     .from('forms')
-    .select('id, title, description, status, created_at, updated_at, published_at')
+    .select('*')
     .eq('workspace_id', auth.workspaceId)
     .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching forms:', error)
-    return NextResponse.json({ error: 'Failed to fetch forms' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch forms', details: error.message }, { status: 500 })
   }
 
+  // Map is_published to status for API consumers
+  const formsWithStatus = forms?.map(form => ({
+    id: form.id,
+    title: form.title,
+    description: form.description,
+    status: form.is_published ? 'published' : 'draft',
+    created_at: form.created_at,
+    updated_at: form.updated_at,
+  }))
+
   return NextResponse.json({ 
-    data: forms,
+    data: formsWithStatus,
     meta: {
       total: forms?.length || 0,
     }
