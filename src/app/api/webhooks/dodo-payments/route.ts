@@ -46,9 +46,24 @@ function getMetadata(payload: WebhookPayload): Record<string, string> {
 function getCustomerInfo(payload: WebhookPayload): { customerId?: string; email?: string } {
   try {
     const data = payload.data as Record<string, unknown>
+    const customer = data?.customer as Record<string, unknown>
+    
+    // Try multiple possible field names for customer ID
+    const customerId = 
+      data?.customer_id as string ||
+      customer?.id as string ||
+      customer?.customer_id as string ||
+      data?.business?.id as string
+    
+    console.log('Extracting customer info:', { 
+      rawCustomerId: data?.customer_id,
+      customerObject: customer,
+      extractedId: customerId 
+    })
+    
     return {
-      customerId: data?.customer_id as string,
-      email: (data?.customer as Record<string, unknown>)?.email as string,
+      customerId,
+      email: customer?.email as string || data?.email as string,
     }
   } catch {
     return {}
@@ -106,17 +121,23 @@ async function handleSubscriptionActive(payload: WebhookPayload) {
   const plan = metadata.plan || 'pro'
   const billingCycle = metadata.billing_cycle || 'monthly'
 
-  console.log('Subscription active webhook:', { 
+  console.log('Subscription active webhook - Full payload:', JSON.stringify(payload, null, 2))
+  console.log('Subscription active webhook - Extracted data:', { 
     workspaceId, 
     plan, 
     billingCycle,
     customerId: customer.customerId,
     subscriptionId: subscription.subscriptionId,
+    metadata,
   })
 
   if (!workspaceId) {
     console.error('No workspace_id in subscription metadata')
     return
+  }
+
+  if (!customer.customerId) {
+    console.error('No customer_id found in webhook payload')
   }
 
   // Upsert subscription record
