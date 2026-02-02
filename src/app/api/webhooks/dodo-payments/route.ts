@@ -48,15 +48,13 @@ function getCustomerInfo(payload: WebhookPayload): { customerId?: string; email?
     const data = payload.data as Record<string, unknown>
     const customer = data?.customer as Record<string, unknown>
     
-    // Try multiple possible field names for customer ID
+    // Dodo sends customer.customer_id in subscription webhooks
     const customerId = 
-      data?.customer_id as string ||
-      customer?.id as string ||
-      customer?.customer_id as string ||
-      data?.business?.id as string
+      customer?.customer_id as string ||  // subscription.active has customer.customer_id
+      data?.customer_id as string ||       // some events might have it at top level
+      customer?.id as string
     
     console.log('Extracting customer info:', { 
-      rawCustomerId: data?.customer_id,
       customerObject: customer,
       extractedId: customerId 
     })
