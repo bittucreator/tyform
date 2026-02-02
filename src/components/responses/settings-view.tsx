@@ -404,7 +404,7 @@ export function SettingsView({ form }: SettingsViewProps) {
         </SettingRow>
 
         {!!closedMessage || (
-          <div className="pb-6 border-b border-border/50">
+          <div className="pt-4 pb-6 border-b border-border/50">
             <Textarea
               value={closedMessage}
               onChange={(e) => { setClosedMessage(e.target.value); handleChange(); }}

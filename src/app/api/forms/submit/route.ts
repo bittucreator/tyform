@@ -30,13 +30,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Form not found' }, { status: 404 })
     }
     
+    const formData = form as Form
+    
     // Check if form is published
-    if (!(form as Form).is_published) {
+    if (!formData.is_published) {
       return NextResponse.json({ error: 'Form is not published' }, { status: 403 })
     }
     
+    // Get IP address for duplicate detection
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('x-real-ip') || 
+               'unknown'
+    
+    // Check for duplicate submissions if enabled
+    if (formData.settings.preventDuplicates && ip !== 'unknown') {
+      const { data: existingResponses } = await supabase
+        .from('responses')
+        .select('id')
+        .eq('form_id', formId)
+        .contains('metadata', { ip })
+        .limit(1)
+      
+      if (existingResponses && existingResponses.length > 0) {
+        return NextResponse.json({ 
+          error: 'You have already submitted this form',
+          code: 'DUPLICATE_SUBMISSION'
+        }, { status: 409 })
+      }
+    }
+    
     // Insert the response
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip')
     const { data: response, error: responseError } = await supabase
       .from('responses')
       .insert({
@@ -44,7 +67,7 @@ export async function POST(request: NextRequest) {
         answers,
         metadata: {
           ...metadata,
-          ip: ip || undefined,
+          ip,
         },
       })
       .select()
@@ -56,7 +79,6 @@ export async function POST(request: NextRequest) {
     }
     
     // Trigger webhooks asynchronously (don't wait for them)
-    const formData = form as Form
     if (formData.settings.webhooks && formData.settings.webhooks.length > 0) {
       // Fire and forget - don't await
       triggerWebhooks(formData, response as FormResponse, 'response.created')

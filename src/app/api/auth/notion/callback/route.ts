@@ -85,9 +85,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect back to integrations tab
+    // Redirect back to integrations page
     const redirectUrl = stateData.formId
-      ? `/forms/${stateData.formId}/responses?tab=integrations&connected=notion`
+      ? `/forms/${stateData.formId}/integrations?connected=notion`
       : '/dashboard?connected=notion'
 
     return NextResponse.redirect(new URL(redirectUrl, request.url))

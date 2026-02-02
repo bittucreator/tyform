@@ -92,9 +92,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Redirect back to integrations tab
+    // Redirect back to integrations page
     const redirectUrl = stateData.formId
-      ? `/forms/${stateData.formId}/responses?tab=integrations&connected=google-sheets`
+      ? `/forms/${stateData.formId}/integrations?connected=google-sheets`
       : '/dashboard?connected=google-sheets'
 
     return NextResponse.redirect(new URL(redirectUrl, request.url))

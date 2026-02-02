@@ -56,7 +56,7 @@ import { RankingInput } from './ranking-input'
 import { PoweredByBadge } from './powered-by-badge'
 import { GoogleFontLoader } from '@/components/google-font-loader'
 import { validateAnswer } from '@/lib/form-validation'
-import type { Form, Question, Json } from '@/types/database'
+import type { Form, Question, Json, QuestionType } from '@/types/database'
 
 interface FormViewerProps {
   form: Form
@@ -295,6 +295,13 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
         clearPartialSubmission(form.id)
         // Clear analytics session
         clearSession()
+        
+        // Handle redirect on completion
+        if (form.settings.seo?.redirectUrl) {
+          setTimeout(() => {
+            window.location.href = form.settings.seo!.redirectUrl!
+          }, 1500) // Small delay to show thank you briefly
+        }
       } else {
         console.error('Submit failed:', await response.json())
       }
@@ -303,7 +310,7 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     } finally {
       setIsSubmitting(false)
     }
-  }, [form.id, answers, isPreview])
+  }, [form.id, form.settings.seo, answers, isPreview, questions])
 
   const handleNext = useCallback(() => {
     const nextIndex = getNextQuestionIndex(currentIndex, questions, answers)
@@ -327,12 +334,26 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     setValidationError(null) // Clear validation error when going back
   }
 
+  // Question types that support auto-jump (single-select types)
+  const autoJumpTypes: QuestionType[] = ['multiple_choice', 'yes_no', 'rating', 'nps', 'scale']
+
   const setAnswer = (questionId: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value as Json }))
     setValidationError(null) // Clear validation error when answer changes
     // Track that this question was answered (skip in preview mode)
     if (!isPreview) {
       trackQuestionComplete(questionId)
+    }
+
+    // Auto-jump to next question if enabled and it's a single-select type
+    if (form.settings.autoJump) {
+      const question = questions.find(q => q.id === questionId)
+      if (question && autoJumpTypes.includes(question.type) && value !== undefined && value !== '') {
+        // Small delay for visual feedback before jumping
+        setTimeout(() => {
+          handleNext()
+        }, 300)
+      }
     }
   }
 
