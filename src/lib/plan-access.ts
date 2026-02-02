@@ -115,17 +115,62 @@ export async function getWorkspaceUsage(workspaceId: string): Promise<{
     responseCount = count || 0
   }
   
-  // Team members - for now just return 1 (no workspace_members table yet)
-  const teamMemberCount = 1
+  // Team members - count workspace members
+  let teamMemberCount = 1
+  const { count: memberCount } = await supabase
+    .from('workspace_members')
+    .select('id', { count: 'exact', head: true })
+    .eq('workspace_id', workspaceId)
+  if (memberCount) {
+    teamMemberCount = memberCount
+  }
   
-  // TODO: Calculate storage from file uploads
-  const storageUsedMB = 0
+  // Calculate storage from file uploads in Supabase Storage
+  // Files are stored in form-uploads bucket with path: formId/questionId/filename
+  let storageUsedMB = 0
+  if (formIds && formIds.length > 0) {
+    try {
+      // List files for each form in the workspace
+      for (const form of formIds) {
+        const { data: files } = await supabase.storage
+          .from('form-uploads')
+          .list(form.id, { limit: 1000 })
+        
+        if (files) {
+          // For each form folder, we need to list subfolders (questionIds)
+          for (const item of files) {
+            if (item.id === null) {
+              // It's a folder (questionId), list files inside
+              const { data: questionFiles } = await supabase.storage
+                .from('form-uploads')
+                .list(`${form.id}/${item.name}`, { limit: 1000 })
+              
+              if (questionFiles) {
+                for (const file of questionFiles) {
+                  if (file.metadata?.size) {
+                    storageUsedMB += file.metadata.size / (1024 * 1024)
+                  }
+                }
+              }
+            } else if (item.metadata?.size) {
+              // It's a file directly under formId
+              storageUsedMB += item.metadata.size / (1024 * 1024)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Storage calculation failed, return 0 (non-critical)
+      console.error('Error calculating storage:', error)
+      storageUsedMB = 0
+    }
+  }
   
   return {
     formCount: formCount || 0,
     responseCount,
-    storageUsedMB,
-    teamMemberCount: teamMemberCount || 0,
+    storageUsedMB: Math.round(storageUsedMB * 100) / 100, // Round to 2 decimal places
+    teamMemberCount,
   }
 }
 
