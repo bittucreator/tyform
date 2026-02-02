@@ -264,6 +264,10 @@ export function FormViewer({ form, isPreview = false }: FormViewerProps) {
     
     setIsSubmitting(true)
     
+    // Debug: log what we're submitting
+    console.log('FormViewer - Submitting answers:', answers)
+    console.log('FormViewer - Questions:', questions.map(q => ({ id: q.id, title: q.title })))
+    
     try {
       // Get analytics data
       const sessionAnalytics = getSessionAnalytics()

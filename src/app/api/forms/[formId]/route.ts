@@ -104,6 +104,14 @@ export async function PATCH(
   }
 }
 
+// PUT - Update a form (alias for PATCH)
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ formId: string }> }
+) {
+  return PATCH(request, context)
+}
+
 // DELETE - Delete a form
 export async function DELETE(
   request: NextRequest,

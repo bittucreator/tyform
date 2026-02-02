@@ -2,8 +2,9 @@ import type { FormSettings } from '@/types/database'
 
 export interface FormAccessStatus {
   isOpen: boolean
-  reason?: 'closed' | 'scheduled' | 'limit_reached' | 'not_started'
+  reason?: 'closed' | 'scheduled' | 'limit_reached' | 'not_started' | 'password_required'
   message: string
+  requiresPassword?: boolean
 }
 
 /**
@@ -11,8 +12,19 @@ export interface FormAccessStatus {
  */
 export function checkFormAccess(
   settings: FormSettings,
-  currentSubmissionCount: number = 0
+  currentSubmissionCount: number = 0,
+  passwordVerified: boolean = false
 ): FormAccessStatus {
+  // Check if password protected and not verified
+  if (settings.password && !passwordVerified) {
+    return {
+      isOpen: false,
+      reason: 'password_required',
+      message: 'This form is password protected.',
+      requiresPassword: true,
+    }
+  }
+  
   // Check if manually closed
   if (settings.closeForm) {
     return {
@@ -106,4 +118,19 @@ export function formatCloseDate(settings: FormSettings): string | null {
     dateStyle: 'medium',
     timeStyle: 'short',
   })
+}
+
+/**
+ * Check if form has password protection
+ */
+export function isPasswordProtected(settings: FormSettings): boolean {
+  return !!settings.password && settings.password.length > 0
+}
+
+/**
+ * Verify form password
+ */
+export function verifyFormPassword(settings: FormSettings, inputPassword: string): boolean {
+  if (!settings.password) return true
+  return settings.password === inputPassword
 }

@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormViewer } from '@/components/form-viewer'
 import { FormClosed } from '@/components/form-viewer/form-closed'
-import { checkFormAccess } from '@/lib/form-access'
+import { FormWithPasswordGate } from '@/components/form-viewer/form-with-password-gate'
+import { checkFormAccess, isPasswordProtected } from '@/lib/form-access'
 import { isUUID } from '@/lib/short-id'
 import type { Form } from '@/types/database'
 
@@ -56,13 +57,20 @@ export default async function FormPage({ params }: FormPageProps) {
   // Check form access
   const accessStatus = checkFormAccess(form.settings, submissionCount || 0)
   
-  if (!accessStatus.isOpen) {
+  if (!accessStatus.isOpen && accessStatus.reason !== 'password_required') {
     return <FormClosed message={accessStatus.message} theme={form.settings.theme} />
   }
 
+  // Check if form requires password
+  const requiresPassword = isPasswordProtected(form.settings)
+
   return (
     <Suspense fallback={<FormLoadingFallback />}>
-      <FormViewer form={form} />
+      {requiresPassword ? (
+        <FormWithPasswordGate form={form} />
+      ) : (
+        <FormViewer form={form} />
+      )}
     </Suspense>
   )
 }

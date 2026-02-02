@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { triggerWebhooks } from '@/lib/webhooks'
+import { sendFormNotifications } from '@/lib/form-notifications'
 import type { Form, Response as FormResponse, Json } from '@/types/database'
 
 export async function POST(request: NextRequest) {
@@ -60,6 +61,13 @@ export async function POST(request: NextRequest) {
       // Fire and forget - don't await
       triggerWebhooks(formData, response as FormResponse, 'response.created')
         .catch((err) => console.error('Webhook error:', err))
+    }
+    
+    // Send email notifications asynchronously
+    if (formData.settings.emailNotifications?.enabled || formData.settings.responderEmail?.enabled) {
+      // Fire and forget - don't await
+      sendFormNotifications(formData, response as FormResponse)
+        .catch((err) => console.error('Email notification error:', err))
     }
     
     return NextResponse.json({

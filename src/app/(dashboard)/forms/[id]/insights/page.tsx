@@ -1,14 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormTabsLayout } from '@/components/responses/form-tabs-layout'
-import { ResponsesView } from '@/components/responses/responses-view'
+import { InsightsView } from '@/components/responses/insights-view'
 import type { Form, Response } from '@/types/database'
 
-interface ResponsesPageProps {
+interface InsightsPageProps {
   params: Promise<{ id: string }>
 }
 
-export default async function ResponsesPage({ params }: ResponsesPageProps) {
+export default async function InsightsPage({ params }: InsightsPageProps) {
   const { id } = await params
   const supabase = await createClient()
 
@@ -36,17 +36,9 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
 
   const responses = (responsesData || []) as Response[]
 
-  const completedCount = responses.filter(r => r.metadata?.isComplete !== false).length
-  const partialCount = responses.length - completedCount
-
   return (
     <FormTabsLayout form={form}>
-      <ResponsesView 
-        form={form} 
-        responses={responses}
-        completedCount={completedCount}
-        partialCount={partialCount}
-      />
+      <InsightsView form={form} responses={responses} />
     </FormTabsLayout>
   )
 }

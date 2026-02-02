@@ -157,6 +157,7 @@ export interface SEOSettings {
   description?: string
   image?: string
   favicon?: string
+  redirectUrl?: string
 }
 
 export interface FormSettings {
@@ -231,6 +232,15 @@ export interface FormSettings {
   closedMessage?: string
   closedByDateMessage?: string
   closedByLimitMessage?: string
+  
+  // Password protection
+  password?: string
+  
+  // Prevent duplicate submissions
+  preventDuplicates?: boolean
+  
+  // Auto-jump to next question
+  autoJump?: boolean
 }
 
 export interface Database {
