@@ -1,0 +1,181 @@
+---
+title: Logic & Branching
+description: Create dynamic forms with conditional logic
+---
+
+Logic allows you to show or hide questions based on previous answers.
+
+## Why Use Logic?
+
+Logic makes your forms:
+
+- **Shorter** — Skip irrelevant questions
+- **Personal** — Tailor the experience
+- **Smarter** — Route to different endpoints
+- **Higher converting** — Less friction = more completions
+
+## Logic Types
+
+### Jump Logic
+
+Skip to a specific question based on an answer.
+
+**Example:**
+> If answer to "Are you a customer?" is "Yes" → Jump to "How satisfied are you?"
+> If answer is "No" → Jump to "How did you hear about us?"
+
+### Show/Hide Logic
+
+Conditionally show or hide questions.
+
+**Example:**
+> Show "Company Name" only if "Are you a business?" is "Yes"
+
+### Calculator Logic <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Calculate values based on answers.
+
+**Example:**
+> Total = Quantity × Price
+
+## Creating Logic Rules
+
+### Step 1: Open Logic Panel
+
+1. Select a question
+2. Click the **Logic** tab
+3. Click **Add Logic Rule**
+
+### Step 2: Configure the Rule
+
+| Field | Description |
+|-------|-------------|
+| **If** | The question to check |
+| **Condition** | How to evaluate (equals, contains, etc.) |
+| **Value** | The answer to match |
+| **Then** | Action to take (jump, show, hide) |
+
+### Step 3: Add Multiple Conditions
+
+Click **Add Condition** for complex rules:
+
+- **AND** — All conditions must match
+- **OR** — Any condition can match
+
+## Condition Types
+
+| Condition | Works With | Description |
+|-----------|------------|-------------|
+| Equals | All | Exact match |
+| Does not equal | All | Not a match |
+| Contains | Text | Partial match |
+| Starts with | Text | Prefix match |
+| Greater than | Number | Numeric comparison |
+| Less than | Number | Numeric comparison |
+| Is empty | All | No answer provided |
+| Is not empty | All | Answer was provided |
+
+## Jump Logic Examples
+
+### Example 1: Customer Routing
+
+```
+Question: Are you a current customer?
+
+If "Yes" → Jump to "Rate your experience"
+If "No" → Jump to "What's stopping you?"
+Default → Continue to next question
+```
+
+### Example 2: Qualification
+
+```
+Question: What's your budget?
+
+If "Under $1,000" → Jump to Thank You (disqualify)
+If "$1,000 - $5,000" → Jump to "Tell us about your project"
+If "Over $5,000" → Jump to "Schedule a call"
+```
+
+### Example 3: Skip Sections
+
+```
+Question: Which product are you interested in?
+
+If "Product A" → Jump to "Product A Questions"
+If "Product B" → Jump to "Product B Questions"
+If "Both" → Continue (show all questions)
+```
+
+## Show/Hide Examples
+
+### Example: Conditional Follow-up
+
+```
+Question: Did you experience any issues?
+
+Show "Describe the issue" if answer is "Yes"
+Hide "Describe the issue" if answer is "No"
+```
+
+### Example: Role-Based Questions
+
+```
+Question: What's your role?
+
+Show "Team size" if "Manager" or "Director"
+Show "Manager's email" if "Employee"
+```
+
+## Best Practices
+
+<Callout type="tip">
+  Keep logic simple. If you need more than 3-4 conditions on a single rule, consider breaking it into multiple questions.
+</Callout>
+
+### Do's
+
+- Test all logic paths thoroughly
+- Use default/fallback destinations
+- Document complex logic rules
+- Start simple, add complexity gradually
+
+### Don'ts
+
+- Create circular logic (A then B then A)
+- Jump to a hidden question
+- Over-complicate with too many rules
+- Forget to test edge cases
+
+## Testing Logic
+
+1. Click **Preview**
+2. Go through each path
+3. Verify questions appear/hide correctly
+4. Check all endpoints are reached
+
+<Callout type="warn">
+  Always test every logic branch before publishing. Missing paths can trap respondents.
+</Callout>
+
+## Debugging Logic
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Question never shows | Check all conditions are possible |
+| Wrong question shows | Verify condition values match exactly |
+| Infinite loop | Check for circular jumps |
+| Dead end | Add default jump destinations |
+
+## Next Steps
+
+<Cards>
+  <Card title="Themes" href="/docs/forms/themes">
+    Style your forms beautifully
+  </Card>
+  <Card title="Webhooks" href="/docs/integrations/webhooks">
+    Send logic-filtered data to your apps
+  </Card>
+</Cards>

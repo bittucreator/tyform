@@ -1,0 +1,212 @@
+---
+title: Themes & Styling
+description: Customize your form's appearance to match your brand
+---
+
+Make your forms beautiful and on-brand with Tyform's theming system.
+
+## Theme Editor
+
+Access the theme editor:
+
+1. Open your form in the builder
+2. Click the **Theme** tab
+3. Customize colors, fonts, and styles
+
+## Color Settings
+
+### Primary Colors
+
+| Setting | Usage |
+|---------|-------|
+| **Primary Color** | Buttons, links, focus states |
+| **Background Color** | Form background |
+| **Text Color** | Question and body text |
+| **Secondary Text** | Descriptions, placeholders |
+
+### Button Colors
+
+| Setting | Usage |
+|---------|-------|
+| **Button Background** | Primary button fill |
+| **Button Text** | Button label color |
+| **Button Hover** | Hover state color |
+
+<Callout type="tip">
+  Use your brand's primary color for buttons. Ensure good contrast between button background and text.
+</Callout>
+
+## Typography
+
+### Font Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Heading Font** | Question titles, welcome screen |
+| **Body Font** | Descriptions, options, inputs |
+| **Font Size** | Base size for all text |
+
+### Available Fonts
+
+- Inter (default)
+- Roboto
+- Open Sans
+- Lato
+- Poppins
+- Montserrat
+- Playfair Display
+- Merriweather
+- Custom fonts (Pro)
+
+### Using Custom Fonts <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+1. Go to Theme → Typography
+2. Click **Custom Font**
+3. Enter your Google Fonts URL or upload font files
+
+## Backgrounds
+
+### Solid Color
+
+Simple, clean background color.
+
+### Gradient
+
+Two-color gradient backgrounds:
+
+1. Select **Gradient**
+2. Choose start and end colors
+3. Set angle (0-360°)
+
+### Image Background
+
+Use a custom image:
+
+1. Select **Image**
+2. Upload your image
+3. Adjust overlay opacity
+4. Choose position (cover, contain, tile)
+
+<Callout type="warn">
+  Use subtle backgrounds that don't distract from your questions. Ensure text remains readable.
+</Callout>
+
+## Layout Options
+
+### Question Alignment
+
+- **Left** — Traditional form layout
+- **Center** — Focused, Typeform-style
+
+### Progress Bar
+
+| Option | Description |
+|--------|-------------|
+| **Top** | Bar at top of screen |
+| **Bottom** | Bar at bottom |
+| **Hidden** | No progress indicator |
+| **Percentage** | Show completion % |
+| **Steps** | Show "3 of 10" |
+
+## Preset Themes
+
+Start with a preset and customize:
+
+| Theme | Style |
+|-------|-------|
+| **Default** | Clean, minimal |
+| **Dark Mode** | Dark background, light text |
+| **Gradient** | Modern gradient backgrounds |
+| **Corporate** | Professional, subdued |
+| **Playful** | Colorful, rounded |
+| **Minimal** | Ultra-clean, no borders |
+
+## Brand Kit <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Save brand settings to reuse across forms:
+
+1. Create your theme
+2. Click **Save as Brand Kit**
+3. Name your brand kit
+4. Apply to new forms instantly
+
+### Brand Kit Includes
+
+- All color settings
+- Typography choices
+- Logo
+- Background settings
+- Custom CSS
+
+## Custom CSS <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+For advanced customization:
+
+```css
+/* Example: Custom button style */
+.tyform-button {
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Example: Question card style */
+.tyform-question {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 2rem;
+}
+```
+
+<Callout type="info">
+  Custom CSS overrides all theme settings. Use browser dev tools to find class names.
+</Callout>
+
+## Mobile Optimization
+
+Your theme automatically adapts to mobile:
+
+- Font sizes scale down
+- Touch-friendly tap targets
+- Simplified layouts
+- Gesture support
+
+Preview mobile appearance:
+
+1. Click **Preview**
+2. Click the **Mobile** icon
+3. Test on actual device for best results
+
+## Theme Best Practices
+
+### Accessibility
+
+- Ensure 4.5:1 contrast ratio for text
+- Don't rely on color alone
+- Use readable font sizes (16px minimum)
+- Test with screen readers
+
+### Performance
+
+- Optimize background images (under 500KB)
+- Use web-safe or Google fonts
+- Avoid heavy gradients on mobile
+
+### Branding
+
+- Match your website colors
+- Use consistent fonts
+- Include your logo
+- Keep it professional
+
+## Next Steps
+
+<Cards>
+  <Card title="Share Your Form" href="/docs/sharing/overview">
+    Get your styled form in front of users
+  </Card>
+  <Card title="Embedding" href="/docs/sharing/embedding">
+    Embed on your website
+  </Card>
+</Cards>

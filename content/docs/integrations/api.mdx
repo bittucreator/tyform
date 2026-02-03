@@ -1,0 +1,365 @@
+---
+title: API Reference
+description: Integrate Tyform with your applications using our REST API
+---
+
+Build custom integrations with the Tyform REST API.
+
+## Authentication
+
+All API requests require authentication using an API key.
+
+### Getting Your API Key
+
+1. Go to **Settings** → **API**
+2. Click **Generate API Key**
+3. Copy and securely store your key
+
+### Using the API Key
+
+Include your key in the `Authorization` header:
+
+```bash
+curl -X GET "https://tyform.com/api/v1/forms" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+<Callout type="warn">
+  Never expose your API key in client-side code. Always call the API from your server.
+</Callout>
+
+## Base URL
+
+```
+https://api.tyform.com/v1
+```
+
+## Rate Limits
+
+| Plan | Requests/minute |
+|------|-----------------|
+| Free | 60 |
+| Pro | 300 |
+| Business | 1000 |
+
+Rate limit headers are included in responses:
+
+```http
+X-RateLimit-Limit: 300
+X-RateLimit-Remaining: 299
+X-RateLimit-Reset: 1705312800
+```
+
+## Forms API
+
+### List Forms
+
+```bash
+GET /forms
+```
+
+**Response:**
+
+```json
+{
+  "forms": [
+    {
+      "id": "abc123",
+      "title": "Customer Survey",
+      "status": "published",
+      "responses_count": 150,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-15T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 45
+  }
+}
+```
+
+### Get Form
+
+```bash
+GET /forms/{form_id}
+```
+
+**Response:**
+
+```json
+{
+  "id": "abc123",
+  "title": "Customer Survey",
+  "status": "published",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "short_text",
+      "title": "What's your name?",
+      "required": true
+    },
+    {
+      "id": "q2",
+      "type": "email",
+      "title": "What's your email?",
+      "required": true
+    }
+  ],
+  "settings": {
+    "close_date": null,
+    "response_limit": null
+  },
+  "theme": {
+    "primary_color": "#6366f1"
+  }
+}
+```
+
+### Create Form
+
+```bash
+POST /forms
+```
+
+**Request:**
+
+```json
+{
+  "title": "New Survey",
+  "questions": [
+    {
+      "type": "short_text",
+      "title": "What's your name?",
+      "required": true
+    }
+  ]
+}
+```
+
+### Update Form
+
+```bash
+PATCH /forms/{form_id}
+```
+
+**Request:**
+
+```json
+{
+  "title": "Updated Title",
+  "status": "closed"
+}
+```
+
+### Delete Form
+
+```bash
+DELETE /forms/{form_id}
+```
+
+## Responses API
+
+### List Responses
+
+```bash
+GET /forms/{form_id}/responses
+```
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (default: 1) |
+| `per_page` | integer | Results per page (max: 100) |
+| `since` | datetime | Responses after this date |
+| `until` | datetime | Responses before this date |
+| `status` | string | Filter by status |
+
+**Response:**
+
+```json
+{
+  "responses": [
+    {
+      "id": "resp_xyz",
+      "submitted_at": "2024-01-15T10:30:00Z",
+      "answers": {
+        "q1": "John Doe",
+        "q2": "john@example.com"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 20,
+    "total": 150
+  }
+}
+```
+
+### Get Response
+
+```bash
+GET /forms/{form_id}/responses/{response_id}
+```
+
+### Delete Response
+
+```bash
+DELETE /forms/{form_id}/responses/{response_id}
+```
+
+## Webhooks API
+
+### List Webhooks
+
+```bash
+GET /forms/{form_id}/webhooks
+```
+
+### Create Webhook
+
+```bash
+POST /forms/{form_id}/webhooks
+```
+
+**Request:**
+
+```json
+{
+  "url": "https://your-server.com/webhook",
+  "events": ["response.submitted"]
+}
+```
+
+### Delete Webhook
+
+```bash
+DELETE /forms/{form_id}/webhooks/{webhook_id}
+```
+
+## Error Handling
+
+### Error Response Format
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "The request body is invalid",
+    "details": {
+      "field": "title",
+      "issue": "Title is required"
+    }
+  }
+}
+```
+
+### Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `unauthorized` | 401 | Invalid or missing API key |
+| `forbidden` | 403 | Insufficient permissions |
+| `not_found` | 404 | Resource doesn't exist |
+| `rate_limited` | 429 | Too many requests |
+| `invalid_request` | 400 | Bad request format |
+| `server_error` | 500 | Internal server error |
+
+## Pagination
+
+All list endpoints support pagination:
+
+```bash
+GET /forms?page=2&per_page=50
+```
+
+**Response includes:**
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 2,
+    "per_page": 50,
+    "total": 245,
+    "total_pages": 5
+  }
+}
+```
+
+## Filtering
+
+### Date Filtering
+
+```bash
+GET /forms/{form_id}/responses?since=2024-01-01&until=2024-01-31
+```
+
+### Field Filtering
+
+```bash
+GET /forms/{form_id}/responses?filter[q1]=John
+```
+
+## SDKs
+
+### JavaScript/TypeScript
+
+```bash
+npm install @tyform/sdk
+```
+
+```typescript
+import { Tyform } from '@tyform/sdk';
+
+const tyform = new Tyform('YOUR_API_KEY');
+
+// List forms
+const forms = await tyform.forms.list();
+
+// Get responses
+const responses = await tyform.forms.responses('form_id', {
+  since: new Date('2024-01-01'),
+  perPage: 100
+});
+```
+
+### Python
+
+```bash
+pip install tyform
+```
+
+```python
+from tyform import Tyform
+
+client = Tyform('YOUR_API_KEY')
+
+# List forms
+forms = client.forms.list()
+
+# Get responses
+responses = client.forms.responses('form_id', since='2024-01-01')
+```
+
+## Changelog
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.2 | 2024-01 | Added bulk operations |
+| v1.1 | 2023-11 | Added webhooks API |
+| v1.0 | 2023-09 | Initial release |
+
+## Next Steps
+
+<Cards>
+  <Card title="Webhooks" href="/docs/integrations/webhooks">
+    Real-time event notifications
+  </Card>
+  <Card title="Zapier" href="/docs/integrations/zapier">
+    No-code automation
+  </Card>
+</Cards>

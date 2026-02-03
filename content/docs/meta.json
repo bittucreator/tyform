@@ -1,0 +1,19 @@
+{
+  "root": true,
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "quick-start",
+    "first-form",
+    "---Forms---",
+    "...forms",
+    "---Sharing---",
+    "...sharing",
+    "---Responses---",
+    "...responses",
+    "---Integrations---",
+    "...integrations",
+    "---Billing---",
+    "...billing"
+  ]
+}

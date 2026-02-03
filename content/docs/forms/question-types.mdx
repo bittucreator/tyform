@@ -1,0 +1,268 @@
+---
+title: Question Types
+description: Complete guide to all Tyform question types
+---
+
+Tyform offers a variety of question types to collect any kind of data.
+
+## Text Questions
+
+### Short Text
+
+Single-line text input for names, titles, and brief answers.
+
+**Settings:**
+- Minimum length
+- Maximum length
+- Input validation (letters, numbers, etc.)
+
+**Best for:** Names, titles, short answers
+
+---
+
+### Long Text
+
+Multi-line text area for detailed responses.
+
+**Settings:**
+- Minimum length
+- Maximum length
+- Character counter
+
+**Best for:** Feedback, descriptions, comments
+
+---
+
+### Email
+
+Email input with built-in validation.
+
+**Settings:**
+- Allow business email only
+- Block disposable emails (Pro)
+
+**Best for:** Contact forms, signups, newsletters
+
+---
+
+### Phone
+
+Phone number input with country code support.
+
+**Settings:**
+- Default country
+- Allowed countries
+- Format validation
+
+**Best for:** Contact information, verification
+
+---
+
+### URL
+
+Website URL input with validation.
+
+**Settings:**
+- Require HTTPS
+- Validate URL format
+
+**Best for:** Portfolio links, social profiles
+
+## Number Questions
+
+### Number
+
+Numeric input for quantities and amounts.
+
+**Settings:**
+- Minimum value
+- Maximum value
+- Decimal places
+- Unit label (e.g., "$", "kg")
+
+**Best for:** Age, quantity, price
+
+## Selection Questions
+
+### Multiple Choice
+
+Select one option from a list.
+
+**Settings:**
+- Options list
+- Allow "Other"
+- Randomize order
+- Column layout
+
+**Best for:** Single selection questions, surveys
+
+---
+
+### Checkboxes
+
+Select multiple options from a list.
+
+**Settings:**
+- Options list
+- Minimum selections
+- Maximum selections
+- Allow "Other"
+- Randomize order
+
+**Best for:** Multi-select questions, preferences
+
+---
+
+### Dropdown
+
+Compact single selection in a dropdown menu.
+
+**Settings:**
+- Options list
+- Searchable (for long lists)
+- Placeholder text
+
+**Best for:** Long lists, country/state selection
+
+## Rating Questions
+
+### Rating
+
+Star or icon-based rating.
+
+**Settings:**
+- Scale (1-5, 1-10)
+- Icon type (stars, hearts, thumbs, numbers)
+- Labels (start and end)
+
+**Best for:** Satisfaction surveys, reviews
+
+---
+
+### Scale
+
+Linear scale with labeled endpoints.
+
+**Settings:**
+- Start value (0 or 1)
+- End value (5, 7, or 10)
+- Start label
+- End label
+- Show numbers
+
+**Best for:** NPS, opinion scales, likelihood
+
+## Date & Time
+
+### Date
+
+Date picker with calendar interface.
+
+**Settings:**
+- Date format
+- Minimum date
+- Maximum date
+- Disable weekends
+- Disable specific dates
+
+**Best for:** Appointments, birthdates, deadlines
+
+---
+
+### Time
+
+Time input for scheduling.
+
+**Settings:**
+- Time format (12h/24h)
+- Minimum time
+- Maximum time
+- Time intervals (15min, 30min, etc.)
+
+**Best for:** Appointment scheduling
+
+## File Upload
+
+### File Upload <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Accept file uploads from respondents.
+
+**Settings:**
+- Allowed file types
+- Maximum file size
+- Multiple files
+- Maximum files
+
+**Supported types:**
+- Images: JPG, PNG, GIF, WebP
+- Documents: PDF, DOC, DOCX
+- Spreadsheets: XLS, XLSX, CSV
+- Other: ZIP, TXT
+
+**Best for:** Applications, portfolios, documents
+
+## Display Elements
+
+### Welcome Screen
+
+Introduction screen shown before questions.
+
+**Settings:**
+- Title
+- Description
+- Button text
+- Background image
+
+**Best for:** Setting context, branding
+
+---
+
+### Statement
+
+Display information without requiring input.
+
+**Settings:**
+- Title
+- Description
+- Button text
+
+**Best for:** Instructions, transitions, information
+
+---
+
+### Thank You Screen
+
+Confirmation shown after submission.
+
+**Settings:**
+- Title
+- Description
+- Redirect URL
+- Show social share buttons
+- Restart button
+
+**Best for:** Confirmation, next steps, sharing
+
+## Question Best Practices
+
+<Callout type="tip">
+  Use the right question type for the data you need. Email questions validate emails automatically. Number questions prevent text input.
+</Callout>
+
+### Recommendations
+
+1. **Start with a Welcome Screen** — Set expectations
+2. **Ask easy questions first** — Build momentum
+3. **Group related questions** — Use statements as dividers
+4. **End with Thank You** — Confirm and redirect
+
+## Next Steps
+
+<Cards>
+  <Card title="Logic & Branching" href="/docs/forms/logic">
+    Create dynamic form flows
+  </Card>
+  <Card title="Themes" href="/docs/forms/themes">
+    Style your questions beautifully
+  </Card>
+</Cards>

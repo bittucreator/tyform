@@ -1,0 +1,193 @@
+---
+title: Sharing Overview
+description: All the ways to share your Tyform with your audience
+---
+
+Once your form is published, share it with the world.
+
+## Sharing Options
+
+### Direct Link
+
+Every published form gets a unique URL:
+
+```
+https://tyform.com/f/your-form-id
+```
+
+Share this link via:
+- Email
+- Social media
+- Messaging apps
+- QR codes
+
+### Custom Slug <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Create a memorable URL:
+
+```
+https://tyform.com/f/customer-survey
+```
+
+To set a custom slug:
+1. Go to Form Settings
+2. Click **Share**
+3. Enter your custom slug
+
+### Custom Domain <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Business</span>
+
+Use your own domain:
+
+```
+https://forms.yourcompany.com/survey
+```
+
+## Getting Your Share Link
+
+1. Open your form
+2. Click **Share** in the header
+3. Copy the link
+
+<Callout type="info">
+  Forms must be published before sharing. Draft forms aren't accessible via the share link.
+</Callout>
+
+## Social Sharing
+
+### Share Preview
+
+Customize how your form appears on social media:
+
+| Setting | Platform |
+|---------|----------|
+| **Title** | All platforms |
+| **Description** | All platforms |
+| **Image** | Facebook, Twitter, LinkedIn |
+
+Set these in Form Settings → Social Sharing.
+
+### Quick Share Buttons
+
+Click the share icons to post directly to:
+- Twitter/X
+- Facebook
+- LinkedIn
+- WhatsApp
+
+## QR Code
+
+Generate a QR code for offline sharing:
+
+1. Click **Share**
+2. Select **QR Code**
+3. Download PNG or SVG
+4. Print or display
+
+**Use cases:**
+- Event check-ins
+- Product packaging
+- Business cards
+- Printed materials
+
+## Email Campaigns
+
+### Sharing via Email
+
+Paste your form link in email campaigns. For better engagement:
+
+1. Use a clear call-to-action
+2. Preview what they'll experience
+3. Set expectations on length
+
+### Email Collection Embed
+
+Embed a single email field that opens the full form:
+
+```html
+<form action="https://tyform.com/f/your-form-id/start">
+  <input type="email" name="email" placeholder="Enter your email">
+  <button type="submit">Start Survey</button>
+</form>
+```
+
+## Private Forms
+
+### Password Protection <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Restrict access with a password:
+
+1. Go to Settings → Access
+2. Enable **Password Protection**
+3. Set your password
+
+### Invite Only <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Business</span>
+
+Limit to specific emails:
+
+1. Enable **Invite Only**
+2. Add allowed email addresses
+3. Respondents must verify email
+
+## Scheduling
+
+### Schedule Open/Close
+
+Control when your form accepts responses:
+
+| Setting | Description |
+|---------|-------------|
+| **Start Date** | Form opens automatically |
+| **End Date** | Form closes automatically |
+| **Timezone** | Your preferred timezone |
+
+### Closed Form Message
+
+Customize what users see when form is closed:
+
+1. Go to Settings → Schedule
+2. Edit **Closed Message**
+3. Optionally add redirect URL
+
+## Response Limits
+
+Limit total responses:
+
+1. Go to Settings → Limits
+2. Set **Maximum Responses**
+3. Customize the "Limit Reached" message
+
+## Analytics
+
+Track where responses come from:
+
+### UTM Parameters
+
+Add UTM params to your share links:
+
+```
+https://tyform.com/f/your-form-id?utm_source=email&utm_campaign=launch
+```
+
+### Hidden Fields
+
+Pass data through the URL:
+
+```
+https://tyform.com/f/your-form-id?user_id=123&plan=pro
+```
+
+Access these values in:
+- Response data
+- Logic rules
+- Webhooks
+
+## Next Steps
+
+<Cards>
+  <Card title="Embedding" href="/docs/sharing/embedding">
+    Embed forms on your website
+  </Card>
+  <Card title="Viewing Responses" href="/docs/responses/viewing">
+    See who's responding
+  </Card>
+</Cards>

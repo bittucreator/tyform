@@ -1,0 +1,272 @@
+---
+title: Webhooks
+description: Send form submissions to your backend in real-time
+---
+
+Webhooks let you receive form submissions instantly in your own systems.
+
+## What are Webhooks?
+
+When someone submits your form, Tyform sends a POST request to your specified URL with the response data.
+
+**Use cases:**
+
+- Send data to your CRM
+- Update your database
+- Trigger automation workflows
+- Send custom notifications
+- Sync with external tools
+
+## Setting Up a Webhook
+
+1. Open your form
+2. Go to **Settings** → **Integrations**
+3. Click **Add Webhook**
+4. Enter your webhook URL
+5. Click **Save**
+
+## Webhook Payload
+
+### Request Format
+
+```http
+POST /your-webhook-endpoint HTTP/1.1
+Host: your-server.com
+Content-Type: application/json
+X-Tyform-Signature: sha256=abc123...
+```
+
+### Payload Structure
+
+```json
+{
+  "event": "response.submitted",
+  "form_id": "abc123",
+  "form_title": "Customer Survey",
+  "response_id": "resp_xyz789",
+  "submitted_at": "2024-01-15T10:30:00Z",
+  "answers": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "rating": 5,
+    "feedback": "Great product!",
+    "interests": ["Feature A", "Feature C"]
+  },
+  "metadata": {
+    "completion_time": 120,
+    "device": "desktop",
+    "browser": "Chrome",
+    "ip": "192.168.1.1",
+    "country": "US"
+  },
+  "hidden_fields": {
+    "user_id": "123",
+    "campaign": "launch"
+  }
+}
+```
+
+## Events
+
+| Event | Description |
+|-------|-------------|
+| `response.submitted` | Form was completed |
+| `response.partial` | Partial response (if enabled) |
+| `form.published` | Form was published |
+| `form.closed` | Form was closed |
+
+## Security
+
+### Signature Verification
+
+Every webhook includes a signature header. Verify it to ensure the request came from Tyform:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return `sha256=${expected}` === signature;
+}
+
+// In your endpoint
+app.post('/webhook', (req, res) => {
+  const signature = req.headers['x-tyform-signature'];
+  
+  if (!verifyWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  // Process the webhook
+  console.log('Received response:', req.body.response_id);
+  res.status(200).send('OK');
+});
+```
+
+### Webhook Secret
+
+Find your webhook secret:
+
+1. Go to Settings → Integrations
+2. Click on your webhook
+3. Copy the **Signing Secret**
+
+<Callout type="warn">
+  Never expose your webhook secret. Treat it like a password.
+</Callout>
+
+## Response Requirements
+
+Your endpoint must:
+
+- Respond with `2xx` status code
+- Respond within 30 seconds
+- Handle duplicate deliveries (idempotency)
+
+## Retry Logic
+
+If your endpoint fails, Tyform retries:
+
+| Attempt | Delay |
+|---------|-------|
+| 1st retry | 1 minute |
+| 2nd retry | 5 minutes |
+| 3rd retry | 30 minutes |
+| 4th retry | 2 hours |
+| 5th retry | 24 hours |
+
+After 5 failed attempts, the webhook is marked as failed.
+
+## Testing Webhooks
+
+### Test Payload
+
+Click **Send Test** to receive a sample payload:
+
+```json
+{
+  "event": "test",
+  "form_id": "abc123",
+  "message": "This is a test webhook",
+  "timestamp": "2024-01-15T10:00:00Z"
+}
+```
+
+### Development Tools
+
+Use these services for testing:
+
+- [webhook.site](https://webhook.site) — Inspect incoming webhooks
+- [ngrok](https://ngrok.com) — Expose localhost to the internet
+- [Pipedream](https://pipedream.com) — Build webhook workflows
+
+## Example Integrations
+
+### Slack Notification
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const { form_title, answers } = req.body;
+  
+  await fetch(process.env.SLACK_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: `New response to "${form_title}"`,
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Name:* ${answers.name}\n*Email:* ${answers.email}`
+          }
+        }
+      ]
+    })
+  });
+  
+  res.status(200).send('OK');
+});
+```
+
+### Save to Database
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const { response_id, answers, submitted_at } = req.body;
+  
+  await db.collection('responses').insertOne({
+    _id: response_id,
+    ...answers,
+    createdAt: new Date(submitted_at)
+  });
+  
+  res.status(200).send('OK');
+});
+```
+
+### Send Email
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const { answers } = req.body;
+  
+  await sendEmail({
+    to: answers.email,
+    subject: 'Thanks for your submission!',
+    template: 'confirmation',
+    data: answers
+  });
+  
+  res.status(200).send('OK');
+});
+```
+
+## Webhook Logs
+
+View webhook delivery history:
+
+1. Go to Settings → Integrations
+2. Click on your webhook
+3. View **Delivery Log**
+
+Each entry shows:
+- Timestamp
+- Response status
+- Response time
+- Payload sent
+- Response received
+
+## Troubleshooting
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| 401 Unauthorized | Check signature verification |
+| 404 Not Found | Verify webhook URL is correct |
+| 500 Error | Check your server logs |
+| Timeout | Optimize endpoint performance |
+
+### Debug Mode
+
+Enable debug mode to receive detailed error information in webhook responses.
+
+<Callout type="tip">
+  Process webhooks asynchronously. Accept the webhook quickly, then process in background.
+</Callout>
+
+## Next Steps
+
+<Cards>
+  <Card title="API" href="/docs/integrations/api">
+    Build custom integrations
+  </Card>
+  <Card title="Zapier" href="/docs/integrations/zapier">
+    No-code automation
+  </Card>
+</Cards>

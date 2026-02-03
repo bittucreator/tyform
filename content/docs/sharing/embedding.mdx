@@ -1,0 +1,309 @@
+---
+title: Embedding Forms
+description: Add Tyform to your website with multiple embed options
+---
+
+Embed your forms directly on your website for a seamless experience.
+
+## Embed Types
+
+| Type | Description | Best For |
+|------|-------------|----------|
+| **Standard** | Inline form | Landing pages |
+| **Full Page** | Takes over page | Dedicated form pages |
+| **Popup** | Modal overlay | Triggered by actions |
+| **Slider** | Slides in from side | Feedback widgets |
+| **Popover** | Small floating button | Support/feedback |
+
+## Standard Embed
+
+Embed your form inline on any page.
+
+### Using iframe
+
+```html
+<iframe
+  src="https://tyform.com/f/your-form-id"
+  width="100%"
+  height="600"
+  frameborder="0"
+  allow="camera; microphone"
+></iframe>
+```
+
+### Using JavaScript (Recommended)
+
+```html
+<div id="tyform-container"></div>
+<script src="https://embed.tyform.com/embed.js"></script>
+<script>
+  Tyform.embed('your-form-id', {
+    container: '#tyform-container',
+    height: 600
+  });
+</script>
+```
+
+**Advantages of JavaScript embed:**
+- Auto-resizing height
+- Better mobile experience
+- Analytics integration
+- Event callbacks
+
+## Full Page Embed
+
+Make the form take over the entire page:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Survey</title>
+  <style>
+    body { margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+  <script src="https://embed.tyform.com/embed.js"></script>
+  <script>
+    Tyform.fullPage('your-form-id');
+  </script>
+</body>
+</html>
+```
+
+## Popup Modal
+
+Open form in a centered modal:
+
+```html
+<button id="open-form">Take Survey</button>
+
+<script src="https://embed.tyform.com/embed.js"></script>
+<script>
+  const popup = Tyform.popup('your-form-id', {
+    mode: 'modal',
+    size: 'large' // small, medium, large, full
+  });
+
+  document.getElementById('open-form').onclick = () => {
+    popup.open();
+  };
+</script>
+```
+
+### Trigger Options
+
+```javascript
+// Open on button click
+popup.open();
+
+// Open after delay
+setTimeout(() => popup.open(), 5000);
+
+// Open on scroll
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 500) popup.open();
+});
+
+// Open on exit intent
+document.addEventListener('mouseleave', (e) => {
+  if (e.clientY < 10) popup.open();
+});
+```
+
+## Slider
+
+Slide in from the side of the screen:
+
+```html
+<script src="https://embed.tyform.com/embed.js"></script>
+<script>
+  Tyform.slider('your-form-id', {
+    position: 'right', // left, right
+    width: 400,
+    buttonText: 'Feedback',
+    buttonColor: '#6366f1'
+  });
+</script>
+```
+
+## Popover
+
+Small floating button that expands:
+
+```html
+<script src="https://embed.tyform.com/embed.js"></script>
+<script>
+  Tyform.popover('your-form-id', {
+    position: 'bottom-right',
+    icon: 'chat', // chat, help, feedback, custom
+    tooltip: 'Quick feedback'
+  });
+</script>
+```
+
+## Embed Options
+
+### Common Options
+
+```javascript
+Tyform.embed('form-id', {
+  // Container (for standard embed)
+  container: '#my-container',
+  
+  // Dimensions
+  width: '100%',
+  height: 600,
+  
+  // Hidden fields (pre-fill data)
+  hidden: {
+    user_id: '123',
+    plan: 'pro',
+    source: 'website'
+  },
+  
+  // Appearance
+  hideHeaders: false,
+  hideFooter: false,
+  transparentBackground: false,
+  
+  // Callbacks
+  onReady: () => console.log('Form loaded'),
+  onSubmit: (data) => console.log('Submitted', data),
+  onClose: () => console.log('Closed')
+});
+```
+
+## Passing Data
+
+### URL Parameters
+
+Append data to the embed URL:
+
+```html
+<iframe src="https://tyform.com/f/your-form-id?name=John&email=john@example.com"></iframe>
+```
+
+### JavaScript Hidden Fields
+
+```javascript
+Tyform.embed('form-id', {
+  hidden: {
+    user_id: currentUser.id,
+    subscription: currentUser.plan,
+    page_url: window.location.href
+  }
+});
+```
+
+Access these values in:
+- Form logic rules
+- Response data
+- Webhook payloads
+
+## Event Callbacks
+
+### onReady
+
+Fires when form is loaded and ready:
+
+```javascript
+onReady: () => {
+  console.log('Form is ready');
+  hideLoadingSpinner();
+}
+```
+
+### onSubmit
+
+Fires when form is submitted:
+
+```javascript
+onSubmit: (response) => {
+  console.log('Form submitted:', response);
+  trackConversion();
+  showThankYou();
+}
+```
+
+### onClose
+
+Fires when popup/slider is closed:
+
+```javascript
+onClose: () => {
+  console.log('Form closed');
+  // Don't show again for 24 hours
+  localStorage.setItem('form-dismissed', Date.now());
+}
+```
+
+## React Component
+
+For React applications:
+
+```jsx
+import { TyformEmbed } from '@tyform/react';
+
+function App() {
+  return (
+    <TyformEmbed
+      formId="your-form-id"
+      height={600}
+      hidden={{ user_id: '123' }}
+      onSubmit={(data) => console.log(data)}
+    />
+  );
+}
+```
+
+## WordPress
+
+1. Install the Tyform WordPress plugin
+2. Add the block or use shortcode:
+
+```
+[tyform id="your-form-id" height="600"]
+```
+
+## Webflow
+
+1. Add an **Embed** element
+2. Paste the iframe or JavaScript code
+3. Publish your site
+
+## Troubleshooting
+
+### Form not loading
+
+- Check the form is published
+- Verify the form ID is correct
+- Check for JavaScript errors in console
+
+### Height issues
+
+- Use JavaScript embed for auto-resize
+- Set explicit height for iframe
+- Avoid CSS that constrains height
+
+### Mobile issues
+
+- Ensure viewport meta tag is set
+- Test on actual devices
+- Use responsive height values
+
+<Callout type="tip">
+  Test your embed on multiple devices and browsers before going live.
+</Callout>
+
+## Next Steps
+
+<Cards>
+  <Card title="Webhooks" href="/docs/integrations/webhooks">
+    Send submissions to your backend
+  </Card>
+  <Card title="View Responses" href="/docs/responses/viewing">
+    Monitor incoming responses
+  </Card>
+</Cards>

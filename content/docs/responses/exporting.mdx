@@ -1,0 +1,245 @@
+---
+title: Exporting Responses
+description: Download your form responses in multiple formats
+---
+
+Export your responses for analysis, backup, or integration.
+
+## Export Formats
+
+| Format | Best For |
+|--------|----------|
+| **CSV** | Spreadsheets, data analysis |
+| **Excel** | Microsoft Excel users |
+| **JSON** | Developers, APIs |
+| **PDF** | Reports, documentation |
+
+## Quick Export
+
+### Export All Responses
+
+1. Go to **Responses** tab
+2. Click **Export** button
+3. Choose your format
+4. Download the file
+
+### Export Filtered Responses
+
+1. Apply your filters (date, status, etc.)
+2. Click **Export**
+3. Choose "Export Filtered" 
+
+## CSV Export
+
+### Default Structure
+
+Each row is a response. Columns include:
+
+| Column | Description |
+|--------|-------------|
+| `response_id` | Unique identifier |
+| `submitted_at` | Timestamp |
+| `completion_time` | Seconds to complete |
+| `Question 1` | Answer to first question |
+| `Question 2` | Answer to second question |
+| ... | Additional questions |
+
+### CSV Options
+
+| Option | Description |
+|--------|-------------|
+| **Include metadata** | Add timestamp, IP, device info |
+| **Include hidden fields** | Add URL parameters |
+| **Include partial** | Add incomplete responses |
+| **Delimiter** | Comma, semicolon, or tab |
+
+### Multi-Select Handling
+
+For checkbox questions, choose:
+
+- **Separate columns** — One column per option
+- **Combined** — Single column, comma-separated
+
+## Excel Export
+
+Excel exports include:
+
+- **Summary sheet** — Response statistics
+- **Responses sheet** — All individual responses  
+- **Charts sheet** — Pre-built visualizations
+
+### Formatting
+
+Excel exports include:
+- Formatted headers
+- Auto-sized columns
+- Data types (dates, numbers)
+- Conditional formatting
+
+## JSON Export
+
+For developers and integrations:
+
+```json
+{
+  "form_id": "abc123",
+  "form_title": "Customer Survey",
+  "exported_at": "2024-01-15T10:30:00Z",
+  "total_responses": 150,
+  "responses": [
+    {
+      "id": "resp_001",
+      "submitted_at": "2024-01-15T09:00:00Z",
+      "completion_time": 120,
+      "answers": {
+        "question_1": "John Doe",
+        "question_2": "john@example.com",
+        "question_3": ["Option A", "Option C"],
+        "question_4": 5
+      },
+      "metadata": {
+        "ip": "192.168.1.1",
+        "device": "desktop",
+        "browser": "Chrome"
+      },
+      "hidden_fields": {
+        "user_id": "123",
+        "source": "email"
+      }
+    }
+  ]
+}
+```
+
+## PDF Export
+
+Generate formatted reports:
+
+### Individual Response PDF
+
+Export a single response as a PDF document:
+
+1. Open the response
+2. Click **Export PDF**
+3. Customize header/footer
+4. Download
+
+### Summary Report PDF
+
+Export aggregate data:
+
+1. Click **Export** → **PDF Report**
+2. Choose sections to include:
+   - Summary statistics
+   - Question breakdowns
+   - Charts and graphs
+3. Add custom branding
+
+## Scheduled Exports <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Pro</span>
+
+Automate regular exports:
+
+1. Go to Settings → Exports
+2. Click **Schedule Export**
+3. Configure:
+
+| Setting | Options |
+|---------|---------|
+| **Frequency** | Daily, Weekly, Monthly |
+| **Format** | CSV, Excel, JSON |
+| **Delivery** | Email, Webhook, Cloud Storage |
+| **Filters** | Only new responses, date range |
+
+### Cloud Storage Integration
+
+Send exports directly to:
+
+- Google Drive
+- Dropbox
+- OneDrive
+- Amazon S3
+
+## API Export
+
+Programmatically fetch responses:
+
+```bash
+curl -X GET "https://tyform.com/api/v1/forms/{form_id}/responses" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+### Pagination
+
+```bash
+# Get responses with pagination
+curl "https://tyform.com/api/v1/forms/{form_id}/responses?page=1&per_page=100"
+```
+
+### Filters via API
+
+```bash
+# Filter by date
+curl "https://tyform.com/api/v1/forms/{form_id}/responses?since=2024-01-01&until=2024-01-31"
+
+# Filter by status
+curl "https://tyform.com/api/v1/forms/{form_id}/responses?status=completed"
+```
+
+## Data Security
+
+<Callout type="info">
+  Exports are generated on-demand and delivered securely. Temporary download links expire after 24 hours.
+</Callout>
+
+### Sensitive Data
+
+Consider before exporting:
+
+- Personal information (names, emails)
+- IP addresses
+- Custom sensitive fields
+
+### Access Logs
+
+All exports are logged:
+
+- Who exported
+- When exported
+- What was included
+- IP address
+
+## Best Practices
+
+### Regular Backups
+
+- Schedule weekly exports
+- Store in secure location
+- Test restore process
+
+### Data Analysis Tips
+
+1. **Use pivot tables** — Summarize large datasets
+2. **Create charts** — Visualize trends
+3. **Cross-reference** — Compare with other data sources
+4. **Segment** — Analyze by user groups
+
+### GDPR Compliance
+
+When exporting personal data:
+
+- Document the purpose
+- Limit access to exports
+- Delete when no longer needed
+- Honor deletion requests
+
+## Next Steps
+
+<Cards>
+  <Card title="Webhooks" href="/docs/integrations/webhooks">
+    Real-time data integration
+  </Card>
+  <Card title="API" href="/docs/integrations/api">
+    Build custom integrations
+  </Card>
+</Cards>

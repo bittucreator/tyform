@@ -62,6 +62,7 @@ export function Footer() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Resources</h4>
               <ul className="space-y-2">
+                <li><Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Docs</Link></li>
                 <li><Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link></li>
                 <li><Link href="/api" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API</Link></li>
                 <li><a href="https://x.com/tyforms" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Updates</a></li>

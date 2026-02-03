@@ -19,6 +19,7 @@ export default function TermsPage() {
             <nav className="hidden md:flex items-center space-x-8">
               <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link>
               <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
+              <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
               <Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link>
             </nav>
 

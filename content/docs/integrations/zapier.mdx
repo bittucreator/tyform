@@ -1,0 +1,261 @@
+---
+title: Zapier Integration
+description: Connect Tyform to 5,000+ apps with Zapier
+---
+
+Automate your workflow by connecting Tyform to thousands of apps through Zapier.
+
+## What is Zapier?
+
+Zapier connects apps together through automated workflows called "Zaps." When something happens in Tyform (trigger), Zapier automatically does something in another app (action).
+
+**Examples:**
+
+- New response → Add row to Google Sheets
+- New response → Create Notion page
+- New response → Send Slack message
+- New response → Add subscriber to Mailchimp
+- New response → Create Salesforce lead
+
+## Connecting to Zapier
+
+### Step 1: Create a Zapier Account
+
+Go to [zapier.com](https://zapier.com) and sign up for free.
+
+### Step 2: Connect Tyform
+
+1. In Zapier, click **Create Zap**
+2. Search for "Tyform" as the trigger app
+3. Click **Connect Account**
+4. Enter your Tyform API key
+5. Click **Continue**
+
+<Callout type="tip">
+  Find your API key at Settings → API in your Tyform dashboard.
+</Callout>
+
+### Step 3: Choose Your Trigger
+
+Select when the Zap should run:
+
+| Trigger | Description |
+|---------|-------------|
+| New Response | When someone completes your form |
+| New Partial Response | When someone starts but doesn't finish |
+
+### Step 4: Select Your Form
+
+Choose which form to monitor from the dropdown.
+
+### Step 5: Add Actions
+
+Choose what happens when the trigger fires. Popular actions:
+
+- **Google Sheets** — Add row
+- **Slack** — Send message
+- **Gmail** — Send email
+- **Mailchimp** — Add subscriber
+- **HubSpot** — Create contact
+- **Notion** — Create page
+- **Airtable** — Create record
+- **Trello** — Create card
+
+## Popular Zap Templates
+
+### Send to Google Sheets
+
+Automatically log every response in a spreadsheet:
+
+1. Trigger: Tyform → New Response
+2. Action: Google Sheets → Create Spreadsheet Row
+3. Map form fields to columns
+
+### Slack Notifications
+
+Get notified when someone submits:
+
+1. Trigger: Tyform → New Response
+2. Action: Slack → Send Channel Message
+3. Customize the message with response data
+
+### Email Follow-up
+
+Send a custom email after submission:
+
+1. Trigger: Tyform → New Response
+2. Action: Gmail → Send Email
+3. Use response fields in the email
+
+### Add to CRM
+
+Create leads automatically:
+
+1. Trigger: Tyform → New Response
+2. Action: HubSpot → Create Contact
+3. Map name, email, and custom fields
+
+## Field Mapping
+
+Map Tyform fields to destination app fields:
+
+### Available Fields
+
+| Field | Description |
+|-------|-------------|
+| Response ID | Unique identifier |
+| Submitted At | Timestamp |
+| [Question Title] | Answer value |
+| Hidden: [Field Name] | Hidden field value |
+
+### Formatting Data
+
+Use Zapier Formatter to transform data:
+
+```
+Full Name → First Name, Last Name
+Date Answer → Formatted Date
+Multiple Choice → Single Value
+```
+
+## Filters & Conditions
+
+Only run actions when conditions are met:
+
+### Example Filters
+
+- Only if email contains "@company.com"
+- Only if rating is 4 or 5
+- Only if country equals "United States"
+
+### Multi-Step Zaps
+
+Chain multiple actions:
+
+```
+New Response
+  ↓
+Filter: Rating >= 4
+  ↓
+Add to "Happy Customers" sheet
+  ↓
+Send thank you email
+  ↓
+Create Slack celebration
+```
+
+## Advanced Features
+
+### Paths <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Zapier Pro</span>
+
+Create branching logic:
+
+```
+New Response
+  ↓
+Path A: If interested in "Product A"
+  → Add to Product A list
+Path B: If interested in "Product B"  
+  → Add to Product B list
+```
+
+### Delays
+
+Add wait times between actions:
+
+```
+New Response
+  ↓
+Send confirmation email
+  ↓
+Wait 3 days
+  ↓
+Send follow-up email
+```
+
+### Lookup Tables
+
+Enrich data with lookups:
+
+```
+Response: State = "CA"
+  ↓
+Lookup: Sales Rep for CA = "John"
+  ↓
+Assign lead to John
+```
+
+## Troubleshooting
+
+### Zap Not Triggering
+
+1. Check that your form is published
+2. Verify the Tyform connection is active
+3. Test with a new submission
+4. Check Zapier task history
+
+### Wrong Data
+
+1. Verify field mappings
+2. Check for formatting issues
+3. Test with sample data
+4. Review Zapier logs
+
+### Connection Issues
+
+1. Re-authenticate Tyform in Zapier
+2. Generate a new API key
+3. Check API key permissions
+
+## Alternatives to Zapier
+
+| Service | Best For |
+|---------|----------|
+| **Make (Integromat)** | Complex workflows |
+| **n8n** | Self-hosted option |
+| **Pipedream** | Developer-friendly |
+| **Webhooks** | Direct integration |
+
+## Best Practices
+
+<Callout type="tip">
+  Test your Zaps with sample data before going live. Use Zapier's test feature.
+</Callout>
+
+### Performance
+
+- Minimize the number of steps
+- Use filters early to reduce runs
+- Consider batching for high volume
+
+### Reliability
+
+- Set up error notifications
+- Monitor Zapier task history
+- Have backup automation
+
+### Organization
+
+- Name Zaps descriptively
+- Use folders for different forms
+- Document complex workflows
+
+## Pricing
+
+| Zapier Plan | Tasks/Month | Multi-Step |
+|-------------|-------------|------------|
+| Free | 100 | No |
+| Starter | 750 | Yes |
+| Professional | 2,000 | Yes |
+| Team | 50,000 | Yes |
+
+## Next Steps
+
+<Cards>
+  <Card title="Webhooks" href="/docs/integrations/webhooks">
+    Direct integration without Zapier
+  </Card>
+  <Card title="API" href="/docs/integrations/api">
+    Build custom integrations
+  </Card>
+</Cards>

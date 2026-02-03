@@ -144,6 +144,7 @@ export default function ComparePage() {
               <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link>
               <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
               <Link href="/compare" className="text-sm text-foreground font-medium transition-colors">Compare</Link>
+              <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
               <Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link>
             </nav>
 
@@ -177,6 +178,7 @@ export default function ComparePage() {
               <Link href="/#features" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</Link>
               <Link href="/pricing" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
               <Link href="/compare" className="block text-sm text-foreground font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>Compare</Link>
+              <Link href="/docs" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
               <Link href="/#faq" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
               <div className="pt-3 border-t border-border space-y-2">
                 <Link href="/login" className="block" onClick={() => setMobileMenuOpen(false)}>
