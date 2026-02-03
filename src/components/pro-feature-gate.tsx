@@ -145,9 +145,10 @@ export function useProFeature(feature: keyof PlanLimits) {
   const { canUse, isLoading, plan } = usePlanAccess()
   
   return {
-    hasAccess: canUse(feature),
+    hasAccess: !isLoading && canUse(feature),
     isLoading,
     isPro: plan === 'pro',
-    shouldDisable: !canUse(feature) && !isLoading,
+    // Disable during loading to prevent race condition exploits
+    shouldDisable: isLoading || !canUse(feature),
   }
 }

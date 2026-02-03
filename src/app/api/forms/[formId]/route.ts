@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { getWorkspaceSubscription } from '@/lib/billing'
+import { hasFeature, type PlanType } from '@/lib/plans'
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -60,10 +62,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify ownership
+    // Verify ownership and get workspace_id
     const { data: existingForm } = await supabase
       .from('forms')
-      .select('id')
+      .select('id, workspace_id, settings')
       .eq('id', formId)
       .eq('user_id', user.id)
       .single()
@@ -74,6 +76,49 @@ export async function PATCH(
 
     const body = await request.json()
     const { title, fields, settings, is_published, theme } = body
+
+    // Server-side Pro feature validation
+    if (settings && existingForm.workspace_id) {
+      const subscription = await getWorkspaceSubscription(existingForm.workspace_id)
+      const isActive = subscription && (subscription.status === 'active' || subscription.status === 'trialing')
+      const plan: PlanType = isActive ? (subscription.plan as PlanType) : 'free'
+      
+      const oldSettings = existingForm.settings || {}
+      
+      // Check Pro features that require validation
+      const proFeatureChecks: Array<{ setting: string; feature: keyof typeof import('@/lib/plans').PLANS.free.limits; getNewValue: () => boolean; getOldValue: () => boolean }> = [
+        { 
+          setting: 'enablePartialSubmissions', 
+          feature: 'partialSubmissions',
+          getNewValue: () => settings.enablePartialSubmissions === true,
+          getOldValue: () => oldSettings.enablePartialSubmissions === true
+        },
+        { 
+          setting: 'showPoweredBy', 
+          feature: 'removeBranding',
+          getNewValue: () => settings.showPoweredBy === false,
+          getOldValue: () => oldSettings.showPoweredBy === false
+        },
+        { 
+          setting: 'responderEmail.enabled', 
+          feature: 'responderEmailNotifications',
+          getNewValue: () => settings.responderEmail?.enabled === true,
+          getOldValue: () => oldSettings.responderEmail?.enabled === true
+        },
+      ]
+      
+      for (const check of proFeatureChecks) {
+        const newValue = check.getNewValue()
+        const oldValue = check.getOldValue()
+        
+        // If trying to enable a pro feature they didn't have before
+        if (newValue && !oldValue && !hasFeature(plan, check.feature)) {
+          return NextResponse.json({ 
+            error: `${check.feature} requires a Pro subscription` 
+          }, { status: 403 })
+        }
+      }
+    }
 
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString()
