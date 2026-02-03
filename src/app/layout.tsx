@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tyform.com";
+const siteUrl = "https://www.tyform.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -80,13 +80,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: siteUrl,
+    url: "https://www.tyform.com",
     siteName: "Tyform",
     title: "Tyform - Free Typeform Alternative | Create Beautiful Forms",
     description: "Build stunning, interactive forms for free. The best alternative to Typeform, Tally & Google Forms. Unlimited forms, unlimited responses, powerful analytics.",
     images: [
       {
-        url: "/OG.png",
+        url: "https://www.tyform.com/OG.png",
         width: 1200,
         height: 630,
         alt: "Tyform - Free Beautiful Form Builder - Typeform Alternative",
@@ -100,7 +100,7 @@ export const metadata: Metadata = {
     creator: "@tyforms",
     title: "Tyform - Free Typeform Alternative | Beautiful Form Builder",
     description: "Create stunning forms for free. Better than Typeform, Tally & Google Forms. Unlimited everything. Start building in seconds.",
-    images: ["/OG.png"],
+    images: ["https://www.tyform.com/OG.png"],
   },
   robots: {
     index: true,
