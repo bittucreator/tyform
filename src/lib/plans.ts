@@ -55,6 +55,9 @@ export interface PlanLimits {
   auditLogs: boolean
   prioritySupport: boolean
   dedicatedManager: boolean
+  
+  // AI Features
+  aiFeatures: boolean
 }
 
 export interface PlanInfo {
@@ -125,6 +128,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
       auditLogs: false,
       prioritySupport: false,
       dedicatedManager: false,
+      
+      // AI Features
+      aiFeatures: false,
     },
   },
   pro: {
@@ -186,6 +192,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
       auditLogs: false,
       prioritySupport: true,
       dedicatedManager: false,
+      
+      // AI Features
+      aiFeatures: true,
     },
   },
 }
@@ -308,5 +317,9 @@ export const FEATURE_UPGRADE_MESSAGES: Partial<Record<keyof PlanLimits, { title:
   premiumIntegrations: {
     title: 'Premium integrations',
     description: 'Connect Google Analytics and Meta Pixel for conversion tracking.',
+  },
+  aiFeatures: {
+    title: 'AI-Powered Features',
+    description: 'Generate forms with AI, get smart insights from responses, and ask questions about your data.',
   },
 }

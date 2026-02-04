@@ -12,11 +12,12 @@ import {
   DeviceTablet,
   Globe,
   TrendUp,
-  TrendDown,
-  Minus
+  Minus,
+  Sparkle
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import type { Form, Response } from '@/types/database'
+import { AIInsightsPanel } from '@/components/ai-insights-panel'
 
 interface InsightsViewProps {
   form: Form
@@ -54,7 +55,7 @@ interface AnalyticsData {
 }
 
 type TimeFilter = '24h' | '7d' | '30d' | 'all'
-type InsightTab = 'visits' | 'dropoff'
+type InsightTab = 'visits' | 'dropoff' | 'ai'
 
 const TIME_FILTER_DAYS: Record<TimeFilter, number> = {
   '24h': 1,
@@ -69,7 +70,7 @@ export function InsightsView({ form, responses }: InsightsViewProps) {
   const [showTimeDropdown, setShowTimeDropdown] = useState(false)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [, setError] = useState<string | null>(null)
 
   // Fetch analytics data
   useEffect(() => {
@@ -169,6 +170,18 @@ export function InsightsView({ form, responses }: InsightsViewProps) {
             )}
           >
             Question drop-off
+          </button>
+          <button
+            onClick={() => setActiveTab('ai')}
+            className={cn(
+              "px-4 py-2 text-sm font-medium rounded-full transition-colors flex items-center gap-1.5",
+              activeTab === 'ai'
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <Sparkle className="h-3.5 w-3.5" weight="fill" />
+            AI Insights
           </button>
         </div>
 
@@ -392,6 +405,7 @@ export function InsightsView({ form, responses }: InsightsViewProps) {
         </>
       ) : (
         /* Drop-off tab */
+        activeTab === 'dropoff' ? (
         <>
           {!hasData ? (
             <div className="flex flex-col items-center justify-center py-24">
@@ -453,7 +467,12 @@ export function InsightsView({ form, responses }: InsightsViewProps) {
             </div>
           )}
         </>
-      )}
+        ) : (
+        /* AI Insights tab */
+        <div className="min-h-100">
+          <AIInsightsPanel formId={form.id} responseCount={responses.length} />
+        </div>
+      ))}
     </div>
   )
 }

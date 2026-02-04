@@ -367,7 +367,7 @@ export function LogicFlowPanel({ open, onClose }: LogicFlowPanelProps) {
                       )}
                     >
                       <span className="text-sm font-medium truncate flex items-center gap-1.5">
-                        <span className="flex-shrink-0">{getQuestionIcon(question.type)}</span>
+                        <span className="shrink-0">{getQuestionIcon(question.type)}</span>
                         <span className="truncate">
                           {question.title 
                             ? `${index + 1}. ${question.title.substring(0, 18)}${question.title.length > 18 ? '...' : ''}`
